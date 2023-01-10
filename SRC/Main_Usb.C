@@ -1,12 +1,3 @@
-
-/********************************** (C) COPYRIGHT *******************************
-* File Name          :CompatibilityHID.C
-* Author             : WCH
-* Version            : V1.2
-* Date               : 2018/02/28
-* Description        : CH554模拟HID兼容设备，支持中断上下传，支持控制端点上下传，支持设置全速，低速
-*******************************************************************************/
-
 #include "CH552.H"
 #include "Debug.H"
 #include "DAP.h"
@@ -21,12 +12,12 @@
 UINT8X Ep0Buffer[THIS_ENDP0_SIZE] _at_ 0x0000;  //端点0 OUT&IN缓冲区，必须是偶地址
 
 // EP1: UART
-UINT8X Ep1BufferO[THIS_ENDP0_SIZE] _at_ 0x0040; //端点1 OUT双缓冲区,必须是偶地址 Not Change!!!!!!
-UINT8X Ep1BufferI[THIS_ENDP0_SIZE] _at_ 0x0080; //端点1 IN双缓冲区,必须是偶地址 Not Change!!!!!!
+UINT8X Ep1BufferO[THIS_ENDP0_SIZE] _at_ 0x0040; //端点1 OUT缓冲区,必须是偶地址 Not Change!!!!!!
+UINT8X Ep1BufferI[THIS_ENDP0_SIZE] _at_ 0x0080; //端点1 IN缓冲区,必须是偶地址 Not Change!!!!!!
 
 // EP2: DAP-CMD
 //100,140,180,1C0
-UINT8X Ep2BufferO[4 * THIS_ENDP0_SIZE] _at_ 0x0100; //端点2 OUT双缓冲区,必须是偶地址
+UINT8X Ep2BufferO[4 * THIS_ENDP0_SIZE] _at_ 0x0100; //端点2 OUT缓冲区
 
 // EP3: DAP-ASK
 //200,240,280,2C0
@@ -113,6 +104,7 @@ UINT8C MySerNumber[] =
     '5', 0, 'V', 0, '0', 0, '-', 0, 'I', 0, 'O', 0, '-', 0, 'C', 0,
     'h', 0, 'i', 0, '4', 0, '1', 0
 };
+
 // 接口: CMSIS-DAP v2
 UINT8C MyInterface[] =
 {
@@ -248,10 +240,7 @@ void USBDeviceInit()
     USB_INT_EN = bUIE_SUSPEND | bUIE_TRANSFER | bUIE_BUS_RST;
     IE_USB = 1;
 }
-/*******************************************************************************
-* Function Name  : DeviceInterrupt()
-* Description    : CH559USB中断处理函数
-*******************************************************************************/
+
 typedef void( *goISP)( void );
 goISP ISP_ADDR=0x3800;
 
@@ -581,8 +570,7 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
                 if (U_TOG_OK)
                 {
                     memcpy(LineCoding, UsbSetupBuf, USB_RX_LEN);
-                    //Config_Uart1(LineCoding);
-										Config_Uart0(LineCoding);
+					Config_Uart0(LineCoding);
                     UEP0_T_LEN = 0;
                     UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_ACK;  // 准备上传0包
                 }
@@ -707,7 +695,6 @@ void main(void)
 				LED = 0;
 			}			
 		}
-		
 		
 		if(TO_IAP){
 			USB_CTRL=0;

@@ -215,3 +215,112 @@ void Uart0_ISR(void) interrupt INT_NO_UART0 using 1
 		TI =0;	
 	}		
 }
+
+// TODO 检查所有usb端点号是否正确 检查所有usb寄存器方向是否正确
+UINT8X Uart_TxBuff0[64]_at_ 0x0300;
+BOOL Uart_TxBuff0Used;
+UINT8I Uart_TxBuff0Length;
+UINT8X Uart_TxBuff1[64]_at_ 0x0340;
+BOOL Uart_TxBuff1Used;
+UINT8I Uart_TxBuff1Length;
+UINT8X Uart_RxBuff0[64]_at_ 0x0380;
+BOOL Uart_RxBuff0Used;
+UINT8X Uart_RxBuff1[64]_at_ 0x03C0;
+BOOL Uart_RxBuff1Used;
+UINT8I Uart_TxPointer;
+UINT8I Uart_RxPointer;
+UINT8I Uart_TxDataLength;
+void Uart0_ISR1(void){
+	if (TI){
+		if(UEP1_CTRL & bUEP_T_TOG){ // Expect Data1
+			if(Uart_TxPointer < Uart_TxBuff0Length){
+				SBUF = Uart_TxBuff0[Uart_TxPointer++];
+			}else{
+				Uart_TxPointer = 0;
+				if(Uart_TxBuff1Used){
+					SBUF = Uart_TxBuff1[Uart_TxPointer++];
+					UEP1_CTRL ^= bUEP_T_TOG;
+					UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
+				}
+				Uart_TxBuff0Used = 0;
+			}
+		}else{
+			if(Uart_TxPointer < Uart_TxBuff1Length){
+				SBUF = Uart_TxBuff1[Uart_TxPointer++];
+			}else{
+				Uart_TxPointer = 0;
+				if(Uart_TxBuff1Used){
+					SBUF = Uart_TxBuff1[Uart_TxPointer++];
+					UEP1_CTRL ^= bUEP_T_TOG;
+					UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
+				}
+				Uart_TxBuff1Used = 0;
+			}
+		}
+	}
+	if (RI){
+		if(!(UEP1_CTRL & bUEP_R_TOG)){ // Expect Data0
+			Uart_RxBuff1Used = 1；
+			Uart_RxBuff1[Uart_RxPointer++] = SBUF;
+			if (!Uart_RxBuff0Used){
+				Uart_RxPointer = 0;
+				UEP1_CTRL ^= bUEP_R_TOG;
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_ACK;//使能发送
+			}
+		}else{
+			Uart_RxBuff0Used = 1；
+			Uart_RxBuff0[Uart_RxPointer++] = SBUF;
+			if (!Uart_RxBuff1Used){
+				Uart_RxPointer = 0;
+				UEP1_CTRL ^= bUEP_R_TOG;
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_ACK;//使能发送
+			}
+		}
+	}
+}
+
+
+void USB_CDC_Routine(void){
+	if(1){ // Get Data
+		if(UEP1_CTRL & bUEP_T_TOG){ // Expect Data1
+			Uart_TxBuff1Used = 1;
+			Uart_TxBuff0Length = USB_RX_LEN;
+			UEP1_CTRL = UEP1_CTRL & ~MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
+			if(!Uart_TxBuff0Used){ // 如果此时串口不在发东西的话，需要发第一个数据
+				SBUF = Uart_TxBuff1[Uart_TxPointer++];
+				UEP1_CTRL ^= bUEP_T_TOG;
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
+			}
+		}else{
+			Uart_TxBuff0Used = 1;
+			Uart_TxBuff1Length = USB_RX_LEN;
+			UEP1_CTRL = UEP1_CTRL & ~MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
+			if(!Uart_TxBuff1Used){ // 如果此时串口不在发东西的话，需要发第一个数据
+				SBUF = Uart_TxBuff0[Uart_TxPointer++];
+				UEP1_CTRL ^= bUEP_T_TOG;
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
+			}
+		}
+	}else{
+		if(UEP1_CTRL & bUEP_R_TOG){ // Expect Data1
+			Uart_RxBuff1Used = 0;
+			UEP1_CTRL = UEP1_CTRL & ~MASK_UEP_R_RES | UEP_R_RES_NAK; //默认应答NAK
+			if(Uart_RxBuff0Used){
+				UEP1_CTRL ^= bUEP_R_TOG;
+				UEP1_T_LEN = Uart_RxPointer;
+				Uart_RxPointer = 0;
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_ACK;//使能发送
+			}
+		}else{
+			Uart_RxBuff0Used = 0;
+			UEP1_CTRL = UEP1_CTRL & ~MASK_UEP_R_RES | UEP_R_RES_NAK; //默认应答NAK
+			if(Uart_RxBuff1Used){
+				UEP1_CTRL ^= bUEP_R_TOG;
+				UEP1_T_LEN = Uart_RxPointer;
+				Uart_RxPointer = 0;
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_ACK;//使能发送
+			}
+		}
+	}
+}
+

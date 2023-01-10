@@ -177,7 +177,7 @@ static UINT8I DAP_Disconnect(UINT8 *res)
 //   return:   number of bytes in response
 static UINT8I DAP_ResetTarget(UINT8 *res)
 {
-		SWD_ResetTarget_Soft();
+	SWD_ResetTarget_Soft();
     *(res + 1) = 0; 
     *(res + 0) = DAP_OK;
     return 2;
