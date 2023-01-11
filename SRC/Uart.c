@@ -93,7 +93,8 @@ void USB_CDC_GetData(void){
 	ES = 0;
 	if(UEP1_CTRL & bUEP_R_TOG){ // Uart_TxBuff0
 		Uart_TxBuff0Length = USB_RX_LEN;
-		AT_Process(Uart_TxBuff0);
+		if (AT_Process(Uart_TxBuff0))
+			return;
 		if(!Uart_TxBuff1Used){ // 如果此时串口不在发东西的话，需要发第一个数据
 			Uart_TxDealingWhich = 0;
 			SBUF = Uart_TxBuff0[Uart_TxPointer++];
@@ -104,7 +105,8 @@ void USB_CDC_GetData(void){
 		Uart_TxBuff0Used = 1;
 	}else{ // Uart_TxBuff1
 		Uart_TxBuff1Length = USB_RX_LEN;
-		AT_Process(Uart_TxBuff1);
+		if (AT_Process(Uart_TxBuff1))
+			return;
 		if(!Uart_TxBuff0Used){ // 如果此时串口不在发东西的话，需要发第一个数据
 			Uart_TxDealingWhich = 1;
 			SBUF = Uart_TxBuff1[Uart_TxPointer++];
@@ -119,7 +121,7 @@ void USB_CDC_GetData(void){
 
 void USB_CDC_PushData(void){
 	ES = 0;
-	if(UEP1_CTRL & bUEP_T_TOG){ // Uart_RxBuff0
+	if(Uart_RxDealingWhich){ // Uart_RxBuff0
 		if(Uart_RxBuff1Used){
 			UEP1_T_LEN = Uart_RxPointer;
 			Uart_RxPointer = 0;

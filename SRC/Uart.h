@@ -12,6 +12,9 @@
 void UART_Setup(void);
 
 extern UINT8X Uart_TxBuff0[];
+extern UINT8X Uart_TxBuff1[];
+extern UINT8X Uart_RxBuff0[];
+extern UINT8X Uart_RxBuff1[];
 
 void USB_CDC_PushData(void);
 void USB_CDC_GetData(void);

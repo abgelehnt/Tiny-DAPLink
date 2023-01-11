@@ -2,4 +2,6 @@
 
 extern BOOL TO_IAP;
 
-void AT_Process(PUINT8 Uart_TxBuff);
+void GetChipID(UINT8 * str);
+
+UINT8 AT_Process(PUINT8 Uart_TxBuff);

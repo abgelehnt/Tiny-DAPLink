@@ -93,13 +93,13 @@ UINT8C MyProdInfo[] =
     'C', 0, 'M', 0, 'S', 0, 'I', 0, 'S', 0, '-', 0, 'D', 0, 'A', 0,
     'P', 0
 };
-// 序列号: 3V3-IO-12345
-UINT8C MySerNumber[] =
+
+// 序列号
+UINT8X SerNumber[] =
 {
-    0x1A,
+    0x12,
     0x03,
-    '5', 0, 'V', 0, '0', 0, '-', 0, 'I', 0, 'O', 0, '-', 0, 'C', 0,
-    'h', 0, 'i', 0, '4', 0, '1', 0
+    '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0,
 };
 
 // 接口: CMSIS-DAP v2
@@ -277,6 +277,8 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
             len = USB_RX_LEN;
             if (len == (sizeof(USB_SETUP_REQ)))
             {
+				char ChipID[8],i;
+				
                 SetupLen = UsbSetupBuf->wLengthL;
                 if (UsbSetupBuf->wLengthH)
                     SetupLen = 0xFF; // 限制总长度
@@ -313,8 +315,13 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
 											len = sizeof(MyProdInfo);
 											break;
 										case 3:
-											pDescr = (PUINT8)(&MySerNumber[0]);
-											len = sizeof(MySerNumber);
+											//SerNumber
+											GetChipID(ChipID);
+											for(i=1;i<9;i++){
+												SerNumber[2*i] = ChipID[i-1];
+											}
+											pDescr = SerNumber;
+											len = 0x12;
 											break;
 										case 4:
 											pDescr = (PUINT8)(&MyInterface[0]);
