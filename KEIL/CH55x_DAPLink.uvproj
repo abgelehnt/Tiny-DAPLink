@@ -416,6 +416,16 @@
               <FileType>5</FileType>
               <FilePath>..\SRC\Timer.H</FilePath>
             </File>
+            <File>
+              <FileName>AT.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SRC\AT.c</FilePath>
+            </File>
+            <File>
+              <FileName>AT.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\SRC\AT.h</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

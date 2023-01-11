@@ -1,10 +1,11 @@
 #include "CH552.H"
 #include "Uart.H"
 #include "Debug.H"
+#include "AT.h"
 
 #include <string.h>
 
-extern BOOL TO_IAP;
+
 sbit P32 = P3 ^ 2;
 
 void UART_Setup(void)
@@ -94,19 +95,6 @@ void Uart0_ISR(void) interrupt INT_NO_UART0 using 1{
 			}
 		}
 		RI = 0;
-	}
-}
-
-void AT_Process(PUINT8 Uart_TxBuff){
-	if(!strncmp("AT",Uart_TxBuff,2)){
-		if(!strncmp("RST",&Uart_TxBuff[3],3)){
-			EA = 0;
-			SAFE_MOD = 0x55;
-			SAFE_MOD = 0xAA;
-			GLOBAL_CFG |= bSW_RESET;
-		}else if(!strncmp("IAP",&Uart_TxBuff[3],3)){
-			TO_IAP = 1;
-		}
 	}
 }
 
