@@ -3,8 +3,32 @@
 #include "Debug.H"
 #include "AT.h"
 
+UINT8X Uart_TxBuff0[64] _at_ 0x0300;
+BOOL Uart_TxBuff0Used;
+UINT8I Uart_TxBuff0Length;
+UINT8X Uart_TxBuff1[64] _at_ 0x0340;
+BOOL Uart_TxBuff1Used;
+UINT8I Uart_TxBuff1Length;
+UINT8X Uart_RxBuff0[64] _at_ 0x0380;
+BOOL Uart_RxBuff0Used;
+UINT8X Uart_RxBuff1[64] _at_ 0x03C0;
+BOOL Uart_RxBuff1Used;
+UINT8I Uart_TxPointer;
+UINT8I Uart_RxPointer;
+BOOL Uart_TxDealingWhich;
+BOOL Uart_RxDealingWhich;
+
 void UART_Setup(void)
 {
+	Uart_TxBuff0Used = 0;
+	Uart_TxBuff1Used = 0;
+	Uart_RxBuff0Used = 0;
+	Uart_RxBuff1Used = 0;
+	Uart_TxBuff0Length = 0;
+	Uart_TxBuff1Length = 0;
+	Uart_TxPointer = 0;
+	Uart_RxPointer = 0;
+	
 	P3_MOD_OC|=0x03;
 	P3_DIR_PU|=0x03;
 	
@@ -20,21 +44,6 @@ void UART_Setup(void)
 	SCON = 0x50;//串口0使用模式1    TI = 1;    REN = 1;       
 	ES = 1;	
 }
-
-UINT8X Uart_TxBuff0[64]_at_ 0x0300;
-BOOL Uart_TxBuff0Used;
-UINT8I Uart_TxBuff0Length;
-UINT8X Uart_TxBuff1[64]_at_ 0x0340;
-BOOL Uart_TxBuff1Used;
-UINT8I Uart_TxBuff1Length;
-UINT8X Uart_RxBuff0[64]_at_ 0x0380;
-BOOL Uart_RxBuff0Used;
-UINT8X Uart_RxBuff1[64]_at_ 0x03C0;
-BOOL Uart_RxBuff1Used;
-UINT8I Uart_TxPointer;
-UINT8I Uart_RxPointer;
-BOOL Uart_TxDealingWhich;
-BOOL Uart_RxDealingWhich;
 
 void Uart0_ISR(void) interrupt INT_NO_UART0 using 1{
 	if (TI){

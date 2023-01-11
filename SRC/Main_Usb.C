@@ -263,6 +263,8 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
             break;
 
         case UIS_TOKEN_IN | 1: //endpoint 1# 端点批量上传 CDC
+			UEP1_T_LEN = 0;      //预使用发送长度一定要清空
+            UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
 			USB_CDC_PushData();
             break;
 
