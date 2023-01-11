@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-extern BOOL TO_IAP;
+BOOL TO_IAP;
 
 void AT_Process(PUINT8 Uart_TxBuff){
 	if(!strncmp("AT",Uart_TxBuff,2)){

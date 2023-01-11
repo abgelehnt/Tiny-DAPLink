@@ -3,16 +3,17 @@
 #include "DAP.h"
 #include "Uart.h"
 #include "Timer.H"
+#include "AT.h"
 
 #define Fullspeed 1
 #define WINUSB 1
 #define THIS_ENDP0_SIZE 64
 #define ENDP4_IN_SIZE 			8
-sbit P32 = P3 ^ 2;
+
 UINT8X Ep0Buffer[THIS_ENDP0_SIZE] _at_ 0x0000;  //端点0 OUT&IN缓冲区，必须是偶地址
 
 // EP1: UART
-extern UINT8X Uart_TxBuff0[]; // 端点1 OUT&IN 双缓冲区，长度0x100
+// extern UINT8X Uart_TxBuff0[]; // 端点1 OUT&IN 双缓冲区，长度0x100
 // UINT8X Ep1BufferO[THIS_ENDP0_SIZE] _at_ 0x0040; //端点1 OUT双缓冲区,必须是偶地址 Not Change!!!!!!
 // UINT8X Ep1BufferI[THIS_ENDP0_SIZE] _at_ 0x0080; //端点1 IN双缓冲区,必须是偶地址 Not Change!!!!!!
 
@@ -240,8 +241,6 @@ void USBDeviceInit()
 typedef void( *goISP)( void );
 goISP ISP_ADDR=0x3800;
 
-BOOL TO_IAP = 0;
-
 void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄存器组1
 {
     UINT8 len;
@@ -260,23 +259,16 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
         case UIS_TOKEN_IN | 3: //endpoint 3# 端点批量上传 DAP_ASK
             Endp3Busy = 0;
             UEP3_T_LEN = 0;      //预使用发送长度一定要清空
-            UEP3_CTRL = UEP3_CTRL & ~MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
+            UEP3_CTRL = UEP3_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
             break;
 
         case UIS_TOKEN_IN | 1: //endpoint 1# 端点批量上传 CDC
-            UEP1_T_LEN = 0;      //预使用发送长度一定要清空
-			UEP1_CTRL = UEP1_CTRL & ~MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
-            //Endp1Busy = 0;
 			USB_CDC_PushData();
             break;
 
         case UIS_TOKEN_OUT | 1: //endpoint 1# 端点批量下传 CDC
             if (U_TOG_OK)         // 不同步的数据包将丢弃
             {
-                //USBByteCount = USB_RX_LEN;
-                //USBBufOutPoint = 0;                                             //取数据指针复位
-                //UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_NAK;       //收到一包数据就NAK，主函数处理完，由主函数修改响应方式
-				//Ep1Buffer[USB_RX_LEN] = 0;
 				USB_CDC_GetData();
             }
             break;
@@ -621,12 +613,6 @@ UINT16 LED_Timer;
 void main(void)
 {
     UINT8 Uart_Timeout = 0;
-	UINT8 i;
-	// TODO debug
-	P32 = 1;
-	for(i=0;i<0xFE;i++){
-		Uart_TxBuff0[i] = 0xAA;
-	}
 	
     CfgFsys();   //CH559时钟选择配置
     mDelaymS(5); //修改主频等待内部晶振稳定,必加
