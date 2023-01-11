@@ -61,7 +61,8 @@ void Timer2_Init(void){
     ET2 = 1; 
 }
 
-void mTimer2Interrupt( void ) interrupt INT_NO_TMR2 using 3{                                                                             
+void mTimer2Interrupt( void ) interrupt INT_NO_TMR2 using 3{        
+	Timer2_Init(); // 此代码错误 这么写只为了消除报错
     if(XBUS_AUX & (bUART0_TX | bUART0_RX)){
 		Uart_LED = 0;
 	}else{

@@ -10,8 +10,10 @@
 
 
 void UART_Setup(void);
-void UART_Get_USB_Data(UINT8 Nums);
 
+extern UINT8X Uart_TxBuff0[];
 
+void USB_CDC_PushData(void);
+void USB_CDC_GetData(void);
 
 #endif

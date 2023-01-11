@@ -1,19 +1,20 @@
 #include "CH552.H"
 #include "Debug.H"
 #include "DAP.h"
-#include "Uart.H"
+#include "Uart.h"
 #include "Timer.H"
 
 #define Fullspeed 1
 #define WINUSB 1
 #define THIS_ENDP0_SIZE 64
 #define ENDP4_IN_SIZE 			8
-
+sbit P32 = P3 ^ 2;
 UINT8X Ep0Buffer[THIS_ENDP0_SIZE] _at_ 0x0000;  //端点0 OUT&IN缓冲区，必须是偶地址
 
 // EP1: UART
-UINT8X Ep1BufferO[THIS_ENDP0_SIZE] _at_ 0x0040; //端点1 OUT缓冲区,必须是偶地址 Not Change!!!!!!
-UINT8X Ep1BufferI[THIS_ENDP0_SIZE] _at_ 0x0080; //端点1 IN缓冲区,必须是偶地址 Not Change!!!!!!
+extern UINT8X Uart_TxBuff0[]; // 端点1 OUT&IN 双缓冲区，长度0x100
+// UINT8X Ep1BufferO[THIS_ENDP0_SIZE] _at_ 0x0040; //端点1 OUT双缓冲区,必须是偶地址 Not Change!!!!!!
+// UINT8X Ep1BufferI[THIS_ENDP0_SIZE] _at_ 0x0080; //端点1 IN双缓冲区,必须是偶地址 Not Change!!!!!!
 
 // EP2: DAP-CMD
 //100,140,180,1C0
@@ -52,7 +53,7 @@ UINT8C DevDesc[] =
 };
 UINT8C CfgDesc[] =
 {
-    0x09, 0x02, 0x74, 0x00, 0x04, 0x01, 0x00, 0x80, 0xfa, //配置描述符
+    0x09, 0x02, 0x62, 0x00, 0x03, 0x01, 0x00, 0x80, 0xfa, //配置描述符
 
     //DAP
     0x09, 0x04, 0x00, 0x00, 0x02, 0xff, 0x00, 0x00, 0x04, //接口描述符
@@ -71,11 +72,6 @@ UINT8C CfgDesc[] =
     0x04, 0x24, 0x02, 0x02,
     0x05, 0x24, 0x06, 0x03, 0x02,
     0x07, 0x05, 0x84, 0x03, 0x08, 0x00, 0xFF,
-	
-	//Keyboard
-	0x09, 0x04, 0x04, 0x00, 0x01, 0x03, 0x01, 0x01, 0x00,
-    0x09, 0x21, 0x11, 0x01, 0x00, 0x01, 0x22, 0x3e, 0x00,
-	0x07, 0x05, 0x84, 0x03, ENDP4_IN_SIZE, 0x00, 0x0a,
 };
 
 UINT16I USB_STATUS = 0;
@@ -175,20 +171,20 @@ UINT8C WINUSB_Descriptor[] =
     '}', 0, 0, 0, 0, 0,
 };
 
-UINT8C KeyRepDesc[62] =
-{
-    0x05,0x01,0x09,0x06,0xA1,0x01,0x05,0x07,
-    0x19,0xe0,0x29,0xe7,0x15,0x00,0x25,0x01,
-    0x75,0x01,0x95,0x08,0x81,0x02,0x95,0x01,
-    0x75,0x08,0x81,0x01,0x95,0x03,0x75,0x01,
-    0x05,0x08,0x19,0x01,0x29,0x03,0x91,0x02,
-    0x95,0x05,0x75,0x01,0x91,0x01,0x95,0x06,
-    0x75,0x08,0x26,0xff,0x00,0x05,0x07,0x19,
-    0x00,0x29,0x91,0x81,0x00,0xC0
-};
+// UINT8C KeyRepDesc[62] =
+// {
+    // 0x05,0x01,0x09,0x06,0xA1,0x01,0x05,0x07,
+    // 0x19,0xe0,0x29,0xe7,0x15,0x00,0x25,0x01,
+    // 0x75,0x01,0x95,0x08,0x81,0x02,0x95,0x01,
+    // 0x75,0x08,0x81,0x01,0x95,0x03,0x75,0x01,
+    // 0x05,0x08,0x19,0x01,0x29,0x03,0x91,0x02,
+    // 0x95,0x05,0x75,0x01,0x91,0x01,0x95,0x06,
+    // 0x75,0x08,0x26,0xff,0x00,0x05,0x07,0x19,
+    // 0x00,0x29,0x91,0x81,0x00,0xC0
+// };
 
 /*Keyboard Data*/
-UINT8 HIDKey[8] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0};
+// UINT8 HIDKey[8] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0};
 
 
 //void Config_Uart1(UINT8 *cfg_uart);
@@ -218,10 +214,10 @@ void USBDeviceInit()
     UEP4_1_MOD &= ~(bUEP4_RX_EN | bUEP4_TX_EN);                //端点0单64字节收发缓冲区
     UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;                 //OUT事务返回ACK，IN事务返回NAK
 
-    UEP1_DMA = Ep1BufferO;                                     //端点1数据传输地址
-    UEP4_1_MOD |= bUEP1_TX_EN | bUEP1_RX_EN;                   //端点1发送接收使能
-    UEP4_1_MOD &= ~bUEP1_BUF_MOD;                              //端点1收发各64字节缓冲区
-    UEP1_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_ACK; //端点1自动翻转同步标志位，IN事务返回NAK，OUT返回ACK
+    UEP1_DMA = Uart_TxBuff0;									//端点1数据传输地址
+    UEP4_1_MOD |= bUEP1_TX_EN | bUEP1_RX_EN;					//端点1发送接收使能
+    UEP4_1_MOD |= bUEP1_BUF_MOD;								//端点1收发各双64字节缓冲区
+    UEP1_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_ACK; 					//端点1，IN事务返回NAK，OUT返回ACK
 
     UEP2_DMA = Ep2BufferO;                                     //端点2数据传输地址
     UEP3_DMA = Ep3BufferI;                                     //端点2数据传输地址
@@ -269,10 +265,11 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
 
         case UIS_TOKEN_IN | 1: //endpoint 1# 端点批量上传 CDC
             UEP1_T_LEN = 0;      //预使用发送长度一定要清空
+			UEP1_CTRL = UEP1_CTRL & ~MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
             //Endp1Busy = 0;
-			EP1_TX_BUSY = FALSE;
-            UEP1_CTRL = UEP1_CTRL & ~MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
+			USB_CDC_PushData();
             break;
+
         case UIS_TOKEN_OUT | 1: //endpoint 1# 端点批量下传 CDC
             if (U_TOG_OK)         // 不同步的数据包将丢弃
             {
@@ -280,17 +277,7 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
                 //USBBufOutPoint = 0;                                             //取数据指针复位
                 //UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_NAK;       //收到一包数据就NAK，主函数处理完，由主函数修改响应方式
 				//Ep1Buffer[USB_RX_LEN] = 0;
-				if(!strncmp("AT",Ep1BufferO,2)){
-					if(!strncmp("RST",&Ep1BufferO[3],3)){
-						EA = 0;
-						SAFE_MOD = 0x55;
-						SAFE_MOD = 0xAA;
-						GLOBAL_CFG |= bSW_RESET;
-					}else if(!strncmp("IAP",&Ep1BufferO[3],3)){
-						TO_IAP = 1;
-					}
-				}
-				UART_Get_USB_Data(USB_RX_LEN);
+				USB_CDC_GetData();
             }
             break;
 
@@ -594,7 +581,7 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
     if (UIF_BUS_RST) //设备模式USB总线复位中断
     {
         UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
-        UEP1_CTRL = bUEP_AUTO_TOG | UEP_R_RES_ACK;
+        UEP1_CTRL = bUEP_AUTO_TOG | UEP_R_RES_ACK | UEP_T_RES_NAK;
         UEP2_CTRL = bUEP_AUTO_TOG | UEP_R_RES_ACK | UEP_T_RES_NAK;
         USB_DEV_AD = 0x00;
         UIF_SUSPEND = 0;
@@ -634,7 +621,13 @@ UINT16 LED_Timer;
 void main(void)
 {
     UINT8 Uart_Timeout = 0;
-
+	UINT8 i;
+	// TODO debug
+	P32 = 1;
+	for(i=0;i<0xFE;i++){
+		Uart_TxBuff0[i] = 0xAA;
+	}
+	
     CfgFsys();   //CH559时钟选择配置
     mDelaymS(5); //修改主频等待内部晶振稳定,必加
    
@@ -679,7 +672,7 @@ void main(void)
 		
 		if(DAP_LED_BUSY)
 		{
-			LED = 0;
+			LED = 1;
 			LED_Timer = 0;
 		}
 		else
@@ -687,12 +680,12 @@ void main(void)
 			LED_Timer++;
 			if(((UINT8*)&LED_Timer)[0]==0x10)
 			{
-				LED = 1;
+				LED = 0;
 			}							
 			if(((UINT8*)&LED_Timer)[0]==0xC0)
 			{
 				LED_Timer = 0;
-				LED = 0;
+				LED = 1;
 			}			
 		}
 		
