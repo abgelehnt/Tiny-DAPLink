@@ -314,7 +314,7 @@
             <uAregs>0</uAregs>
             <UseInterruptVector>1</UseInterruptVector>
             <Fuzzy>3</Fuzzy>
-            <Optimize>8</Optimize>
+            <Optimize>3</Optimize>
             <WarningLevel>2</WarningLevel>
             <SizeSpeed>1</SizeSpeed>
             <ObjectExtend>1</ObjectExtend>
@@ -405,16 +405,6 @@
               <FileName>Uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SRC\Uart.c</FilePath>
-            </File>
-            <File>
-              <FileName>Timer.C</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SRC\Timer.C</FilePath>
-            </File>
-            <File>
-              <FileName>Timer.H</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\SRC\Timer.H</FilePath>
             </File>
             <File>
               <FileName>AT.c</FileName>

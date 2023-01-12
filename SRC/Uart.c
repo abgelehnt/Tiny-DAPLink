@@ -45,7 +45,20 @@ void UART_Setup(void)
 	ES = 1;	
 }
 
-void Uart0_ISR(void) interrupt INT_NO_UART0 using 1{
+void Config_Uart0(UINT8 *cfg_uart)
+{
+    UINT32X uart0_buad = 0;
+    *((UINT8X *)&uart0_buad) = cfg_uart[3];
+    *((UINT8X *)&uart0_buad + 1) = cfg_uart[2];
+    *((UINT8X *)&uart0_buad + 2) = cfg_uart[1];
+    *((UINT8X *)&uart0_buad + 3) = cfg_uart[0];
+    ES = 0;
+    TH1 = 0 - ((FREQ_SYS+8*uart0_buad) / 16 / uart0_buad);
+    ES = 1;
+}
+
+
+void Uart0_ISR(void) interrupt INT_NO_UART0 using 2{
 	if (TI){
 		if(Uart_TxDealingWhich){ // Uart_TxBuff1
 			if(Uart_TxPointer < Uart_TxBuff1Length){

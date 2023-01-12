@@ -204,8 +204,8 @@
 sbit RST = P1 ^ 4;
 sbit SWK = P1 ^ 7;
 sbit SWD = P1 ^ 5;
-//sbit LED = P1 ^ 1; // TODO 使用开发板 临时修改
-sbit LED = P3 ^ 2; // TODO 使用开发板 临时修改
+//sbit LED = P3 ^ 2; // TODO 使用开发板 临时修改
+sbit LED = P1 ^ 1; // TODO 使用开发板 临时修改
 sbit DIR_SWK = P3 ^ 4;
 sbit DIR_SWD = P3 ^ 2;
 extern BOOL DAP_LED_BUSY;

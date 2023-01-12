@@ -42,7 +42,7 @@ UINT8I Ep3Ii, Ep3Io;            //IN 索引
 UINT8I Ep3Is[DAP_PACKET_COUNT]; //发送包长
 
 PUINT8 pDescr; //USB配置标志
-UINT8I Endp3Busy = 0;
+BOOL Endp3Busy = 0;
 UINT8I SetupReq, SetupLen, Ready, Count, UsbConfig;
 #define UsbSetupBuf ((PUSB_SETUP_REQ)Ep0Buffer)
 
@@ -64,10 +64,12 @@ UINT8C CfgDesc[] =
 	
 	//CDC
     0x09, 0x04, 0x02, 0x00, 0x02, 0x0A, 0x00, 0x00, 0x05,
+    // 0x09, 0x04, 0x02, 0x00, 0x02, 0x0A, 0x00, 0x00, 0x05,
     0x07, 0x05, 0x01, 0x02, 0x40, 0x00, 0x00,
     0x07, 0x05, 0x81, 0x02, 0x40, 0x00, 0x00,
 	
     0x09, 0x04, 0x03, 0x00, 0x01, 0x02, 0x02, 0x01, 0x05,
+    // 0x09, 0x04, 0x03, 0x00, 0x01, 0x02, 0x02, 0x01, 0x05,
     0x05, 0x24, 0x00, 0x10, 0x01,
     0x05, 0x24, 0x01, 0x00, 0x01,
     0x04, 0x24, 0x02, 0x02,
@@ -100,6 +102,15 @@ UINT8X SerNumber[] =
     0x12,
     0x03,
     '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0,
+};
+
+// 序列号: 3V3-IO-12345
+UINT8C MySerNumber[] =
+{
+    0x1A,
+    0x03,
+    '5', 0, 'V', 0, '0', 0, '-', 0, 'I', 0, 'O', 0, '-', 0, 'C', 0,
+    'h', 0, 'i', 0, '4', 0, '1', 0
 };
 
 // 接口: CMSIS-DAP v2
@@ -264,7 +275,6 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
 
         case UIS_TOKEN_IN | 1: //endpoint 1# 端点批量上传 CDC
 			UEP1_T_LEN = 0;      //预使用发送长度一定要清空
-            UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
 			USB_CDC_PushData();
             break;
 
@@ -279,8 +289,6 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
             len = USB_RX_LEN;
             if (len == (sizeof(USB_SETUP_REQ)))
             {
-				char ChipID[8],i;
-				
                 SetupLen = UsbSetupBuf->wLengthL;
                 if (UsbSetupBuf->wLengthH)
                     SetupLen = 0xFF; // 限制总长度
@@ -317,13 +325,18 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
 											len = sizeof(MyProdInfo);
 											break;
 										case 3:
-											//SerNumber
-											GetChipID(ChipID);
-											for(i=1;i<9;i++){
-												SerNumber[2*i] = ChipID[i-1];
-											}
+											HEX_TO_ASCII(SerNumber[2],*(UINT8C *)(0x3FFC)/16);
+											HEX_TO_ASCII(SerNumber[4],*(UINT8C *)(0x3FFC)%16);
+											HEX_TO_ASCII(SerNumber[6],*(UINT8C *)(0x3FFD)/16);
+											HEX_TO_ASCII(SerNumber[8],*(UINT8C *)(0x3FFD)%16);
+											
+											HEX_TO_ASCII(SerNumber[10],*(UINT8C *)(0x3FFE)/16);
+											HEX_TO_ASCII(SerNumber[12],*(UINT8C *)(0x3FFE)%16);
+											HEX_TO_ASCII(SerNumber[14],*(UINT8C *)(0x3FFF)/16);
+											HEX_TO_ASCII(SerNumber[16],*(UINT8C *)(0x3FFF)%16);
+											
 											pDescr = SerNumber;
-											len = 0x12;
+											len = sizeof(SerNumber);
 											break;
 										case 4:
 											pDescr = (PUINT8)(&MyInterface[0]);
@@ -582,7 +595,8 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
     if (UIF_BUS_RST) //设备模式USB总线复位中断
     {
         UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
-        UEP1_CTRL = bUEP_AUTO_TOG | UEP_R_RES_ACK | UEP_T_RES_NAK;
+        // UEP1_CTRL = bUEP_AUTO_TOG | UEP_R_RES_ACK | UEP_T_RES_NAK;
+        UEP1_CTRL = bUEP_AUTO_TOG | UEP_R_RES_ACK;
         UEP2_CTRL = bUEP_AUTO_TOG | UEP_R_RES_ACK | UEP_T_RES_NAK;
         USB_DEV_AD = 0x00;
         UIF_SUSPEND = 0;
@@ -617,12 +631,10 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
     }
 }
 
-UINT16 LED_Timer;
+UINT16X LED_Timer;
 
 void main(void)
 {
-    UINT8 Uart_Timeout = 0;
-	
     CfgFsys();   //CH559时钟选择配置
     mDelaymS(5); //修改主频等待内部晶振稳定,必加
    
@@ -667,20 +679,20 @@ void main(void)
 		
 		if(DAP_LED_BUSY)
 		{
-			LED = 1;
+			LED = 0;
 			LED_Timer = 0;
 		}
 		else
 		{
 			LED_Timer++;
-			if(((UINT8*)&LED_Timer)[0]==0x10)
+			if(((UINT8X*)&LED_Timer)[0]==0x10)
 			{
-				LED = 0;
+				LED = 1;
 			}							
-			if(((UINT8*)&LED_Timer)[0]==0xC0)
+			if(((UINT8X*)&LED_Timer)[0]==0xC0)
 			{
 				LED_Timer = 0;
-				LED = 1;
+				LED = 0;
 			}			
 		}
 		
@@ -692,16 +704,4 @@ void main(void)
 		}
 	
     }
-}
-
-void Config_Uart0(UINT8 *cfg_uart)
-{
-    UINT32 uart0_buad = 0;
-    *((UINT8 *)&uart0_buad) = cfg_uart[3];
-    *((UINT8 *)&uart0_buad + 1) = cfg_uart[2];
-    *((UINT8 *)&uart0_buad + 2) = cfg_uart[1];
-    *((UINT8 *)&uart0_buad + 3) = cfg_uart[0];
-    ES = 0;
-    TH1 = 0 - ((FREQ_SYS+8*uart0_buad) / 16 / uart0_buad);
-    ES = 1;
 }
