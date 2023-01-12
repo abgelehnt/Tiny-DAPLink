@@ -397,11 +397,6 @@
               <FilePath>..\SRC\SW_DP.c</FilePath>
             </File>
             <File>
-              <FileName>SW_DP_asm.a51</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\SRC\SW_DP_asm.a51</FilePath>
-            </File>
-            <File>
               <FileName>Uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SRC\Uart.c</FilePath>

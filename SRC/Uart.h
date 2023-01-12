@@ -13,6 +13,8 @@ extern UINT8X Uart_TxBuff1[];
 extern UINT8X Uart_RxBuff0[];
 extern UINT8X Uart_RxBuff1[];
 
+extern BOOL Uart_RxDealingWhich;
+
 void UART_Setup(void);
 void Config_Uart0(UINT8 *cfg_uart);
 

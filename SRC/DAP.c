@@ -403,11 +403,14 @@ static UINT8I DAP_SWD_Sequence(const UINT8 *req, UINT8 *res)
     return response_count;
 }
 */
+
+extern void SWD_Sequence(UINT8I info, const UINT8 *swdo, UINT8 *swdi);
 static UINT8I DAP_SWD_Sequence(const UINT8 *req, UINT8 *res)
 {
     UINT8I sequence_info;
     UINT8I sequence_count;
     //UINT8I request_count;
+	UINT8I request_count;
     UINT8I response_count;
     UINT8I count;
 
@@ -424,21 +427,39 @@ static UINT8I DAP_SWD_Sequence(const UINT8 *req, UINT8 *res)
         {
             count = 64U;
         }
-				if ((sequence_info & SWD_SEQUENCE_DIN) != 0U)
-				{//input
-						SWD_IN_Sequence(count,res);
-						count = (count + 7U) / 8U;
-            //request_count++;
+//				if ((sequence_info & SWD_SEQUENCE_DIN) != 0U)
+//				{//input
+//						SWD_IN_Sequence(count,res);
+//						count = (count + 7U) / 8U;
+//            //request_count++;
+//            res += count;
+//            response_count += count;
+//				}
+//				else
+//				{//output
+//						SWJ_Sequence(count,req);
+//						count = (count + 7U) / 8U;
+//						req += count;
+//						//request_count += count + 1U;
+//				}
+        count = (count + 7U) / 8U;
+        if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
+             SWD = 1;
+        } else {
+             SWD = 0;
+        }
+        SWD_Sequence(sequence_info, req, res);
+        if (sequence_count == 0U) {
+             SWD = 0;
+        }
+        if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
+            request_count++;
             res += count;
             response_count += count;
-				}
-				else
-				{//output
-						SWJ_Sequence(count,req);
-						count = (count + 7U) / 8U;
-						req += count;
-						//request_count += count + 1U;
-				}
+        } else {
+            req += count;
+            request_count += count + 1U;
+        }
     }
     return response_count;
 }
