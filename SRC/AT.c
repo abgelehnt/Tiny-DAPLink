@@ -12,11 +12,13 @@ UINT8 AT_Process(char * Uart_TxBuff){
 			SAFE_MOD = 0x55;
 			SAFE_MOD = 0xAA;
 			GLOBAL_CFG |= bSW_RESET;
+			
 		}else if(!strncmp("IAP",&Uart_TxBuff[3],3)){
 			TO_IAP = 1;
+			
 		}else if(!strncmp("CHIP_ID",&Uart_TxBuff[3],7)){
 			char * str;
-			if (Uart_RxDealingWhich){
+			if (!Uart_RxDealingWhich){
 				str = Uart_RxBuff0;
 			}else{
 				str = Uart_RxBuff1;
@@ -34,6 +36,7 @@ UINT8 AT_Process(char * Uart_TxBuff){
 
 			UEP1_T_LEN = 8;
 			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//Ê¹ÄÜ·¢ËÍ
+			Uart_RxDealingWhich = ~Uart_RxDealingWhich;
 		}
 		return 1;
 	}

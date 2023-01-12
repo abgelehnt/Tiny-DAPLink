@@ -47,11 +47,11 @@ void UART_Setup(void)
 
 void Config_Uart0(UINT8 *cfg_uart)
 {
-    UINT32X uart0_buad = 0;
-    *((UINT8X *)&uart0_buad) = cfg_uart[3];
-    *((UINT8X *)&uart0_buad + 1) = cfg_uart[2];
-    *((UINT8X *)&uart0_buad + 2) = cfg_uart[1];
-    *((UINT8X *)&uart0_buad + 3) = cfg_uart[0];
+    UINT32 uart0_buad = 0;
+    *((UINT8 *)&uart0_buad) = cfg_uart[3];
+    *((UINT8 *)&uart0_buad + 1) = cfg_uart[2];
+    *((UINT8 *)&uart0_buad + 2) = cfg_uart[1];
+    *((UINT8 *)&uart0_buad + 3) = cfg_uart[0];
     ES = 0;
     TH1 = 0 - ((FREQ_SYS+8*uart0_buad) / 16 / uart0_buad);
     ES = 1;
@@ -94,7 +94,7 @@ void Uart0_ISR(void) interrupt INT_NO_UART0 using 1{
 			if (!Uart_RxBuff0Used){
 				UEP1_T_LEN = Uart_RxPointer;
 				Uart_RxPointer = 0;
-				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;
 				Uart_RxDealingWhich = 0;
 			}
 		}else{
@@ -103,7 +103,7 @@ void Uart0_ISR(void) interrupt INT_NO_UART0 using 1{
 			if (!Uart_RxBuff1Used){
 				UEP1_T_LEN = Uart_RxPointer;
 				Uart_RxPointer = 0;
-				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;
 				Uart_RxDealingWhich = 1;
 			}
 		}
@@ -129,7 +129,7 @@ void USB_CDC_GetData(void){
 		Uart_TxBuff1Length = USB_RX_LEN;
 		if (AT_Process(Uart_TxBuff1))
 			return;
-		if(!Uart_TxBuff0Used){ // 如果此时串口不在发东西的话，需要发第一个数据
+		if(!Uart_TxBuff0Used){
 			Uart_TxDealingWhich = 1;
 			SBUF = Uart_TxBuff1[Uart_TxPointer++];
 			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_ACK;
@@ -147,17 +147,17 @@ void USB_CDC_PushData(void){
 		if(Uart_RxBuff1Used){
 			UEP1_T_LEN = Uart_RxPointer;
 			Uart_RxPointer = 0;
-			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
+			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;
 			Uart_RxDealingWhich = 0;
 		}else{
-			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK; //默认应答NAK
+			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;
 		}
 		Uart_RxBuff0Used = 0;
 	}else{
 		if(Uart_RxBuff0Used){
 			UEP1_T_LEN = Uart_RxPointer;
 			Uart_RxPointer = 0;
-			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
+			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;
 			Uart_RxDealingWhich = 1;
 		}else{
 			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;
