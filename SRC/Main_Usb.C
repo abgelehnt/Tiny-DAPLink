@@ -608,20 +608,17 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
         UIF_SUSPEND = 0;
         if (USB_MIS_ST & bUMS_SUSPEND) //挂起
         {
-//             while ( XBUS_AUX & bUART0_TX )
-//             {
-//                 ; // wait until uart0 complete transmitting.
-//             }
-//             SAFE_MOD = 0x55;
-//             SAFE_MOD = 0xAA;
-//             WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO;                                   //USB or RXD0 can wake it up 
-//             PCON |= PD;                                                               //sleep
-//             SAFE_MOD = 0x55;
-//             SAFE_MOD = 0xAA;
-//             WAKE_CTRL = 0x00;
+			LED = 0;
+			while ( XBUS_AUX & bUART0_TX )
+				;									// wait until uart0 complete transmitting.
+			SAFE_MOD = 0x55;
+			SAFE_MOD = 0xAA;
+			WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO;	//USB or RXD0 can wake it up 
+			PCON |= PD;								//sleep
+			SAFE_MOD = 0x55;
+			SAFE_MOD = 0xAA;
+			WAKE_CTRL = 0x00;
         }
-//		Uart_LED = 1;
-		
     }
     else
     {
@@ -678,7 +675,7 @@ void main(void)
 		
 		if(DAP_LED_BUSY)
 		{
-			LED = 0;
+			LED = 1;
 			LED_Timer = 0;
 		}
 		else
@@ -686,12 +683,12 @@ void main(void)
 			LED_Timer++;
 			if(((UINT8X*)&LED_Timer)[0]==0x10)
 			{
-				LED = 1;
+				LED = 0;
 			}							
 			if(((UINT8X*)&LED_Timer)[0]==0xC0)
 			{
 				LED_Timer = 0;
-				LED = 0;
+				LED = 1;
 			}			
 		}
 		

@@ -39,7 +39,7 @@ void UART_Setup(void)
 
 	TMOD = TMOD & ~bT1_GATE & ~bT1_CT & ~MASK_T1_MOD | bT1_M1; //0X20，Timer1作为8位自动重载定时器
 	T2MOD = T2MOD | bTMR_CLK | bT1_CLK;                        //Timer1时钟选择
-	TH1 = 0 - (UINT32)(FREQ_SYS+UART_BUAD*8) / UART_BUAD / 16;//12MHz晶振,buad/12为实际需设置波特率
+	TH1 = 0 - (UINT32)(FREQ_SYS+DEFAULT_UART_BUAD*8) / DEFAULT_UART_BUAD / 16;//12MHz晶振,buad/12为实际需设置波特率
 	TR1 = 1; 																	//启动定时器1
 	SCON = 0x50;//串口0使用模式1    TI = 1;    REN = 1;       
 	ES = 1;	
