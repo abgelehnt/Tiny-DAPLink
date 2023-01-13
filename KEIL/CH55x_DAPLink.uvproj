@@ -411,6 +411,11 @@
               <FileType>5</FileType>
               <FilePath>..\SRC\AT.h</FilePath>
             </File>
+            <File>
+              <FileName>TouchKey.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SRC\TouchKey.C</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

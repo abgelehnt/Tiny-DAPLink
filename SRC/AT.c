@@ -1,5 +1,6 @@
 #include "AT.h"
 #include "Uart.h"
+#include "TouchKey.h"
 
 #include <string.h>
 

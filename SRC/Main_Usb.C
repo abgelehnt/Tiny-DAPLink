@@ -4,6 +4,7 @@
 #include "Uart.h"
 #include "Timer.H"
 #include "AT.h"
+#include "TouchKey.h"
 
 #define Fullspeed 1
 #define WINUSB 1
@@ -627,7 +628,7 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
     }
 }
 
-UINT16X LED_Timer;
+UINT8 LED_Timer;
 
 void main(void)
 {
@@ -656,7 +657,9 @@ void main(void)
     Endp3Busy = 0;
 	DAP_LED_BUSY = 0;
 	LED_Timer = 0;
-
+	
+	TK_Init( BIT4,1,0 );
+	
     while (!UsbConfig) {;};
 
     while (1)
@@ -681,17 +684,19 @@ void main(void)
 		else
 		{
 			LED_Timer++;
-			if(((UINT8X*)&LED_Timer)[0]==0x10)
+			if(LED_Timer==0x10)
 			{
+
 				LED = 0;
 			}							
-			if(((UINT8X*)&LED_Timer)[0]==0xC0)
+			if(LED_Timer==0xE0)
 			{
 				LED_Timer = 0;
 				LED = 1;
-			}			
+			}	
+			TK_Measure();
 		}
-		
+
 		if(TO_IAP){
 			USB_CTRL=0;
 			UDEV_CTRL=0x80;
