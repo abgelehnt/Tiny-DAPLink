@@ -5,11 +5,13 @@
 #include "Timer.H"
 #include "AT.h"
 #include "TouchKey.h"
+#include "Keyboard.h"
+#include "DataFlash.H"
 
 #define Fullspeed 1
 #define WINUSB 1
 #define THIS_ENDP0_SIZE 64
-#define ENDP4_IN_SIZE 			8
+#define ENDP4_IN_SIZE 8
 
 UINT8X Ep0Buffer[THIS_ENDP0_SIZE] _at_ 0x0000;  //端点0 OUT&IN缓冲区，必须是偶地址
 
@@ -26,16 +28,8 @@ UINT8X Ep2BufferO[4 * THIS_ENDP0_SIZE] _at_ 0x0100; //端点2 OUT缓冲区
 //200,240,280,2C0
 UINT8X Ep3BufferI[4 * THIS_ENDP0_SIZE] _at_ 0x0200; //端点3 IN双缓冲区,必须是偶地址
 
-//UINT8X Ep4BufferI[THIS_ENDP0_SIZE] _at_ 0x00C0; //端点4 IN双缓冲区,必须是偶地址
+UINT8X Ep4Buffer[ENDP4_IN_SIZE+2] _at_ 0x0040; //端点4 IN双缓冲区,必须是偶地址
 
-//UINT8I Endp1Busy;
-//UINT8I USBByteCount = 0;       //代表USB端点接收到的数据
-//UINT8I USBBufOutPoint = 0;     //取数据指针
-extern BOOL UART_TX_BUSY;
-extern BOOL EP1_TX_BUSY;
-//UINT8I UartByteCount = 0;      //当前缓冲区剩余待取字节数
-//UINT8I Uart_Input_Point = 0;   //循环缓冲区写入指针，总线复位需要初始化为0
-//UINT8I Uart_Output_Point = 0;  //循环缓冲区取出指针，总线复位需要初始化为0
 BOOL DAP_LED_BUSY;
 
 UINT8I Ep2Oi, Ep2Oo;            //OUT 索引
@@ -56,7 +50,8 @@ UINT8C DevDesc[] =
 UINT8C CfgDesc[] =
 {
 //					wTotalLength	bNumInterfaces
-    0x09,	0x02,	74,	0x00,	0x02,	0x01,	0x00,	0x80,	0xfa, //配置描述符
+    0x09,	0x02,	99,		0x00,	0x03,	0x01,	0x00,	0x80,	0xfa, //配置描述符
+//	0x09,	0x02,	74,		0x00,	0x02,	0x01,	0x00,	0x80,	0xfa, //配置描述符
 
     //DAP
 //			描述符	编号				端点数量 类码		子类码	协议码	字符串索引
@@ -73,6 +68,11 @@ UINT8C CfgDesc[] =
     0x05,	0x24,	0x06,	0x00,	0x01,
     0x07,	0x05,	0x01,	0x02,	0x40,	0x00,	0x00,
     0x07,	0x05,	0x81,	0x02,	0x40,	0x00,	0x00,
+
+	// Keyboard
+	0x09,	0x04,	0x02,	0x00,	0x01,	0x03,	0x01,	0x01,	0x06,	//接口描述符,键盘
+	0x09,	0x21,	0x11,	0x01,	0x00,	0x01,	0x22,	0x3e,	0x00,	//HID类描述符
+	0x07,	0x05,	0x84,	0x03,	8,		0x00,	0x20,					//端点描述符
 };
 
 UINT16I USB_STATUS = 0;
@@ -115,7 +115,16 @@ UINT8C CDC_String[] =
 {
     30,
     0x03,
-    'D', 0, 'A', 0, 'P', 0, 'L', 0, 'i', 0, 'n', 0, 'k', 0, '-', 0, 'C', 0, 'D', 0, 'C', 0, 'E', 0, 'x', 0, 't', 0
+    'D', 0, 'A', 0, 'P', 0, 'L', 0, 'i', 0, 'n', 0, 'k', 0, '-', 0, 
+	'C', 0, 'D', 0, 'C', 0, 'E', 0, 'x', 0, 't', 0
+};
+// 接口：DAPLink-Keyboard
+UINT8C Keyboard_String[] =
+{
+    34,
+    0x03,
+    'D', 0, 'A', 0, 'P', 0, 'L', 0, 'i', 0, 'n', 0, 'k', 0, '-', 0, 
+	'K', 0, 'e', 0, 'y', 0, 'b', 0, 'o', 0, 'a', 0, 'r', 0, 'd', 0
 };
 
 UINT8C USB_BOSDescriptor[] =
@@ -172,24 +181,17 @@ UINT8C WINUSB_Descriptor[] =
     '}', 0, 0, 0, 0, 0,
 };
 
-// UINT8C KeyRepDesc[62] =
-// {
-    // 0x05,0x01,0x09,0x06,0xA1,0x01,0x05,0x07,
-    // 0x19,0xe0,0x29,0xe7,0x15,0x00,0x25,0x01,
-    // 0x75,0x01,0x95,0x08,0x81,0x02,0x95,0x01,
-    // 0x75,0x08,0x81,0x01,0x95,0x03,0x75,0x01,
-    // 0x05,0x08,0x19,0x01,0x29,0x03,0x91,0x02,
-    // 0x95,0x05,0x75,0x01,0x91,0x01,0x95,0x06,
-    // 0x75,0x08,0x26,0xff,0x00,0x05,0x07,0x19,
-    // 0x00,0x29,0x91,0x81,0x00,0xC0
-// };
-
-/*Keyboard Data*/
-// UINT8 HIDKey[8] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0};
-
-
-//void Config_Uart1(UINT8 *cfg_uart);
-void Config_Uart0(UINT8 *cfg_uart);
+/*HID类报表描述符*/
+UINT8C KeyRepDesc[62] = {
+	0x05,0x01,0x09,0x06,0xA1,0x01,0x05,0x07,
+	0x19,0xe0,0x29,0xe7,0x15,0x00,0x25,0x01,
+	0x75,0x01,0x95,0x08,0x81,0x02,0x95,0x01,
+	0x75,0x08,0x81,0x01,0x95,0x03,0x75,0x01,
+	0x05,0x08,0x19,0x01,0x29,0x03,0x91,0x02,
+	0x95,0x05,0x75,0x01,0x91,0x01,0x95,0x06,
+	0x75,0x08,0x26,0xff,0x00,0x05,0x07,0x19,
+	0x00,0x29,0x91,0x81,0x00,0xC0
+};
 
 /*******************************************************************************
 * Function Name  : USBDeviceInit()
@@ -227,8 +229,7 @@ void USBDeviceInit()
     UEP2_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_ACK; //端点2自动翻转同步标志位，IN事务返回NAK，OUT返回ACK
     UEP3_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_NAK;//端点3自动翻转同步标志位，IN事务返回NAK，OUT返回NACK
 
-	//UEP4_DMA = Ep4Buffer;                                                      //??1??????
-    //UEP4_1_MOD = UEP4_1_MOD & ~bUEP4_BUF_MOD | bUEP4_TX_EN;                    //??1???? 64?????
+    UEP4_1_MOD |= bUEP4_TX_EN; // 端点4发送使能
 
     USB_DEV_AD = 0x00;
     USB_CTRL |= bUC_DEV_PU_EN | bUC_INT_BUSY | bUC_DMA_EN; // 启动USB设备及DMA，在中断期间中断标志未清除前自动返回NAK
@@ -263,6 +264,7 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
             break;
 
         case UIS_TOKEN_IN | 1: //endpoint 1# 端点批量上传 CDC
+			UEP1_T_LEN = 0;
 			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;
 			USB_CDC_PushData();
             break;
@@ -273,6 +275,12 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
 				USB_CDC_GetData();
             }
             break;
+		case UIS_TOKEN_IN | 4: //endpoint 1# 端点中断上传
+			UEP4_T_LEN = 0;
+			UEP4_CTRL ^= bUEP_T_TOG;
+			UEP4_CTRL = UEP4_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;           //默认应答NAK
+			Keyboard_Flag = 1;
+			break;
 
         case UIS_TOKEN_SETUP | 0: //SETUP事务
             len = USB_RX_LEN;
@@ -335,6 +343,10 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
 											pDescr = (PUINT8)(&CDC_String[0]);
 											len = sizeof(CDC_String);
 											break;
+										case 6:
+											pDescr = (PUINT8)(&Keyboard_String[0]);
+											len = sizeof(Keyboard_String);
+											break;
 										default:
 											len = 0xFF; // 不支持的字符串描述符
 											break;
@@ -343,6 +355,17 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
 								case 15:
 									pDescr = (PUINT8)(&USB_BOSDescriptor[0]);
 									len = sizeof(USB_BOSDescriptor);
+									break;
+								case 0x22:                                          //报表描述符
+									if(UsbSetupBuf->wIndexL == 2)                   //接口0报表描述符
+									{
+										pDescr = KeyRepDesc;                        //数据准备上传
+										len = sizeof(KeyRepDesc);
+									}
+									else
+									{
+										len = 0xff;           //本程序只有2个接口，这句话正常不可能执行
+									}
 									break;
 								default:
 									len = 0xff; //不支持的命令或者出错
@@ -618,6 +641,7 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
 
 UINT8 LED_Timer;
 
+
 void main(void)
 {
     CfgFsys();   //CH559时钟选择配置
@@ -631,6 +655,9 @@ void main(void)
     P1_DIR_PU = P1_DIR_PU | (1 << 5);
 	
 	//Timer2_Init();
+	TK_Init( BIT4,1,0 );
+	ReadDataFlash(0,1,&TargetKey);
+	memset(Ep4Buffer,0,8);
 	
 	
     EA = 1;          //允许单片机中断
@@ -646,7 +673,7 @@ void main(void)
 	DAP_LED_BUSY = 0;
 	LED_Timer = 0;
 	
-	TK_Init( BIT4,1,0 );
+
 	
     while (!UsbConfig) {;};
 
@@ -677,7 +704,7 @@ void main(void)
 
 				LED = 0;
 			}							
-			if(LED_Timer==0xE0)
+			if(LED_Timer==0xF0)
 			{
 				LED_Timer = 0;
 				LED = 1;
@@ -685,12 +712,11 @@ void main(void)
 			TK_Measure();
 		}
 
-		if(TO_IAP){
-			USB_CTRL=0;
-			UDEV_CTRL=0x80;
-			mDelaymS(10);			
+		if(TO_IAP) {
+			USB_CTRL = 0;
+			UDEV_CTRL = 0x80;
+			mDelaymS(10);
 			(ISP_ADDR)();
 		}
-	
     }
 }

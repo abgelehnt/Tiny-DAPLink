@@ -407,14 +407,19 @@
               <FilePath>..\SRC\AT.c</FilePath>
             </File>
             <File>
-              <FileName>AT.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\SRC\AT.h</FilePath>
-            </File>
-            <File>
               <FileName>TouchKey.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\SRC\TouchKey.C</FilePath>
+            </File>
+            <File>
+              <FileName>Keyboard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SRC\Keyboard.c</FilePath>
+            </File>
+            <File>
+              <FileName>DataFlash.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SRC\DataFlash.C</FilePath>
             </File>
           </Files>
         </Group>

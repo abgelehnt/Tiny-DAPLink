@@ -1,6 +1,14 @@
+/**
+ * @author Chi Zhang
+ * @date 2023/1/13
+ */
+
 #include "AT.h"
+
 #include "Uart.h"
 #include "TouchKey.h"
+#include "DataFlash.H"
+#include "Keyboard.h"
 
 #include <string.h>
 
@@ -38,6 +46,11 @@ UINT8 AT_Process(char * Uart_TxBuff){
 			UEP1_T_LEN = 8;
 			UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//Ê¹ÄÜ·¢ËÍ
 			Uart_RxDealingWhich = ~Uart_RxDealingWhich;
+		}else if(!strncmp("KEY=",&Uart_TxBuff[3],4)){
+			UINT8 x;
+			ASCII_TO_HEX(x,&Uart_TxBuff[7]);
+			WriteDataFlash(0,&x,1);
+			TargetKey = x;
 		}
 		return 1;
 	}

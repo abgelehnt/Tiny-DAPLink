@@ -11,6 +11,7 @@
 #include "TOUCHKEY.H"
 #include "Uart.h"
 #include "AT.h"
+#include "Keyboard.h"
 /*******************************************************************************
 Input channel as below:
 
@@ -188,26 +189,7 @@ UINT8 TK_Measure( void )
 		 {
 			 if((Press_Flag & (1<<i)) == 0) 
 			 {
-				char * str;
-				if (!Uart_RxDealingWhich){
-					str = Uart_RxBuff0;
-				}else{
-					str = Uart_RxBuff1;
-				}
-
-				str[0] = 'K';
-				str[1] = 'P';
-				HEX_TO_ASCII(str[2],num);
-				str[3] = ':';
-				HEX_TO_ASCII(str[4],Key_DataBuf[i]/16/16/16);
-				HEX_TO_ASCII(str[5],Key_DataBuf[i]/16/16%16);
-				HEX_TO_ASCII(str[6],Key_DataBuf[i]/16%16);
-				HEX_TO_ASCII(str[7],Key_DataBuf[i]%16);
-				str[8] = '\n';
-
-				UEP1_T_LEN = 9;
-				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
-				Uart_RxDealingWhich = ~Uart_RxDealingWhich;
+				 Keyboard_Press();
 				// printf("ch %d pressed,value:%d\n",(UINT16)num, Key_DataBuf[i]);
 			 }	
               Press_Flag |= (1<<i);			 
@@ -216,27 +198,7 @@ UINT8 TK_Measure( void )
 		{
 			if(Press_Flag & (1<<i))                                       //刚抬起
 			{
-				char * str;
 				Press_Flag &= ~(1<<i);
-				if (!Uart_RxDealingWhich){
-					str = Uart_RxBuff0;
-				}else{
-					str = Uart_RxBuff1;
-				}
-
-				str[0] = 'K';
-				str[1] = 'U';
-				HEX_TO_ASCII(str[2],num);
-				str[3] = ':';
-				HEX_TO_ASCII(str[4],Key_DataBuf[i]/16/16/16);
-				HEX_TO_ASCII(str[5],Key_DataBuf[i]/16/16%16);
-				HEX_TO_ASCII(str[6],Key_DataBuf[i]/16%16);
-				HEX_TO_ASCII(str[7],Key_DataBuf[i]%16);
-				str[8] = '\n';
-
-				UEP1_T_LEN = 9;
-				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;//使能发送
-				Uart_RxDealingWhich = ~Uart_RxDealingWhich;
 				// printf("ch %d up,value:%d\n",(UINT16)num, Key_DataBuf[i]);
 			}
 		}

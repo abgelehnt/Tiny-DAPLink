@@ -143,7 +143,7 @@ void USB_CDC_GetData(void){
 
 void USB_CDC_PushData(void){
 	ES = 0;
-	if(Uart_RxDealingWhich){ // Uart_RxBuff0
+	if(UEP1_CTRL & bUEP_T_TOG){ // Uart_RxBuff0
 		if(Uart_RxBuff1Used){
 			UEP1_T_LEN = Uart_RxPointer;
 			Uart_RxPointer = 0;
