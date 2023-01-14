@@ -1,15 +1,15 @@
 ¼üÅÌµÄ°´¼üÂë±í
 DEC		HEX		Usage Name
-0       00		Reserved (no event indicated)9
-1       01		Keyboard ErrorRollOver9
-2       02		Keyboard POSTFail9
-3       03		Keyboard ErrorUndefined9
-4       04		Keyboard a and A4
-5       05		Keyboard b and B
-6       06		Keyboard c and C4
-7       07		Keyboard d and D
-8       08		Keyboard e and E
-9       09		Keyboard f and F
+0		00		Reserved (no event indicated)9
+1		01		Keyboard ErrorRollOver9
+2		02		Keyboard POSTFail9
+3		03		Keyboard ErrorUndefined9
+4		04		Keyboard a and A4
+5		05		Keyboard b and B
+6		06		Keyboard c and C4
+7		07		Keyboard d and D
+8		08		Keyboard e and E
+9		09		Keyboard f and F
 10		0A		Keyboard g and G
 11		0B		Keyboard h and H
 12		0C		Keyboard i and I

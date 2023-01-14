@@ -12,17 +12,13 @@ P2	DATA	0A0H
 ;	0			1		PP_Output
 ;	1			0		OC_Output
 ;	1			1		OC_PU_Output
-	
-?PR?SWD_Write_Byte?SW_DP_ASM                SEGMENT CODE 
-?PR?_SWJ_Sequence?SW_DP_ASM                 SEGMENT CODE 
-?PR?_SWD_IN_Sequence?SW_DP_ASM              SEGMENT CODE 
+
+?PR?SWD_Write_Byte?SW_DP_ASM                SEGMENT CODE
 ?PR?_SWD_Transfer?SW_DP_ASM					SEGMENT CODE 
 
 	EXTRN	IDATA (data_phase)
 	EXTRN	IDATA (idle_cycles)
 	;EXTRN	IDATA (turnaround)
-	PUBLIC	_SWJ_Sequence
-	PUBLIC	_SWD_IN_Sequence
 	PUBLIC	_SWD_Transfer
 
 ;ACC = data
@@ -30,76 +26,24 @@ P2	DATA	0A0H
 	RSEG  ?PR?SWD_Write_Byte?SW_DP_ASM
 SWD_Write_Byte:
 	MOV		R0,#8
-SWD_Write_Bits:	
+SWD_Write_Bits:
 	SETB	SWC_PIN
-	RRC		A 
+	RRC		A
 	MOV		SWD_PIN,C
 	CLR		SWC_PIN
 	DJNZ	R0,SWD_Write_Bits
 	SETB	SWC_PIN
 	RET
-	
+
 SWD_Read_Byte:
 	MOV		R0,#8
-SWD_Read_Bits:	
+SWD_Read_Bits:
 	CLR		SWC_PIN
 	MOV		C,SWD_PIN
-	RRC		A 
+	RRC		A
 	SETB	SWC_PIN
 	DJNZ	R0,SWD_Read_Bits
-	RET	
-		
-;R1~R3 = datas Addr	
-;R7 = Count
-	RSEG  ?PR?_SWJ_Sequence?SW_DP_ASM
-_SWJ_Sequence:
-	MOV		P2,R2
-SWJ_Next_Byte:
-	MOV		A,R7
-	CLR		C
-	SUBB	A,#9
-	JC		SWJ_Last_Bits
-	INC		A
-	MOV		R7,A
-	MOVX	A,@R1
-	Call	SWD_Write_Byte
-	INC		R1
-	SJMP	SWJ_Next_Byte
-SWJ_Last_Bits:	
-	MOV		A,R7
-	MOV		R0,A
-	MOVX	A,@R1
-	Call	SWD_Write_Bits
 	RET
-	
-	
-;R1~R3 = datas Addr	
-;R7 = Count
-	RSEG  ?PR?_SWD_IN_Sequence?SW_DP_ASM
-_SWD_IN_Sequence:
-	SETB	SWD_PIN				
-	ORL  	SWD_PMOD_OC,#20H  ;PP_Output->OC_PU_Output->PU_Input ;P1.5
-	CLR		SWD_PIN_DIR
-	MOV		P2,R2
-SWD_IN_Next_Byte:	
-	MOV		A,R7
-	CLR		C
-	SUBB	A,#9
-	JC		SWD_IN_Last_Bits
-	INC		A
-	MOV		R7,A
-	Call	SWD_Read_Byte
-	MOVX	@R1,A
-	INC		R1	
-	SJMP	SWD_IN_Next_Byte
-SWD_IN_Last_Bits:	
-	MOV		A,R7
-	MOV		R0,A
-	Call	SWD_Read_Bits
-	MOVX	@R1,A
-	SETB	SWD_PIN_DIR
-	ANL  	SWD_PMOD_OC,#0DFH ;PU_Input->PP_Output ;P1.5
-	RET	
 
 ;R5 = datas Addr(Idata)	
 ;R7 = Req

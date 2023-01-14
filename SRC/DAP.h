@@ -228,9 +228,10 @@ extern void DAP_Thread(void);
 extern void PORT_SWD_SETUP(void);
 extern void PORT_SWD_OFF(void);
 extern void SWD_ResetTarget_Soft(void);
-extern UINT8I SWD_Transfer(UINT8 reqI, UINT8I *datas);
+extern UINT8 SWD_Transfer(UINT8 req, UINT8 *datas);
 extern void SWJ_Sequence(UINT8I count, const UINT8 *datas);
 //extern void SWD_Sequence(UINT8I info, const UINT8 *swdo, UINT8 *swdi);
 extern void SWD_IN_Sequence(UINT8I count, UINT8 *swdi);
+extern void SWD_Sequence(UINT8I info, const UINT8 *swdo, UINT8 *swdi);
 
 #endif /* __DAP_H__ */

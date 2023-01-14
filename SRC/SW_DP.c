@@ -33,6 +33,9 @@
 
 #define SW_READ_BIT(bits)  SWK = 0; bits = SWD; SWK = 1;
 
+#define PIN_SWDIO_OUT_ENABLE() P1_MOD_OC &= ~(1 << 5);
+
+#define PIN_SWDIO_OUT_DISABLE() P1_MOD_OC |= (1 << 5);
  
 
 
@@ -195,14 +198,14 @@ void SWD_Sequence(UINT8I info, const UINT8 *swdo, UINT8 *swdi)
 //   request: A[3:2] RnW APnDP
 //   datas:    DATA[31:0]
 //   return:  ACK[2:0]
-UINT8I SWD_Transfer(UINT8I req, UINT8I *datas)
+UINT8 SWD_Transfer(UINT8 req, UINT8 *datas)
 {
-    UINT8I ack;
-    UINT8I bits;
-    UINT8I val;
-    UINT8I parity;
+    UINT8 ack;
+    UINT8 bits;
+    UINT8 val;
+    UINT8 parity;
 
-    UINT8I m, n;
+    UINT8 m, n;
 
     /* Packet req */
     parity = 0U;
@@ -224,7 +227,7 @@ UINT8I SWD_Transfer(UINT8I req, UINT8I *datas)
     SW_WRITE_BIT(1U);     /* Park Bit */
 
     /* Turnaround */
-    SWD = 1;
+	PIN_SWDIO_OUT_DISABLE();
     for (n = turnaround; n; n--)
     {
         SW_CLOCK_CYCLE();
@@ -272,7 +275,7 @@ UINT8I SWD_Transfer(UINT8I req, UINT8I *datas)
             {
                 SW_CLOCK_CYCLE();
             }
-            SWD = 1;
+			PIN_SWDIO_OUT_ENABLE();
         }
         else
         {
@@ -281,7 +284,7 @@ UINT8I SWD_Transfer(UINT8I req, UINT8I *datas)
             {
                 SW_CLOCK_CYCLE();
             }
-            SWD = 1;
+			PIN_SWDIO_OUT_ENABLE();
             /* Write datas */
             parity = 0U;
             for (m = 0; m < 4; m++)
@@ -325,7 +328,7 @@ UINT8I SWD_Transfer(UINT8I req, UINT8I *datas)
         {
             SW_CLOCK_CYCLE();
         }
-        SWD = 1;
+		PIN_SWDIO_OUT_ENABLE();
         if (data_phase && ((req & DAP_TRANSFER_RnW) == 0U))
         {
             SWD = 0;
@@ -343,6 +346,7 @@ UINT8I SWD_Transfer(UINT8I req, UINT8I *datas)
     {
         SW_CLOCK_CYCLE(); /* Back off datas phase */
     }
+	PIN_SWDIO_OUT_ENABLE();
     SWD = 1;
     return ((UINT8)ack);
 }

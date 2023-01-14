@@ -349,8 +349,6 @@ static UINT8I DAP_SWD_Configure(const UINT8 *req, UINT8 *res)
 //   response: pointer to response datas
 //   return:   number of bytes in response (lower 16 bits)
 //             number of bytes in request (upper 16 bits)
-
-/*
 static UINT8I DAP_SWD_Sequence(const UINT8 *req, UINT8 *res)
 {
     UINT8I sequence_info;
@@ -402,67 +400,65 @@ static UINT8I DAP_SWD_Sequence(const UINT8 *req, UINT8 *res)
 
     return response_count;
 }
-*/
 
-extern void SWD_Sequence(UINT8I info, const UINT8 *swdo, UINT8 *swdi);
-static UINT8I DAP_SWD_Sequence(const UINT8 *req, UINT8 *res)
-{
-    UINT8I sequence_info;
-    UINT8I sequence_count;
-    //UINT8I request_count;
-	UINT8I request_count;
-    UINT8I response_count;
-    UINT8I count;
-
-    *res++ = DAP_OK;
-
-    //request_count = 1U;
-    response_count = 1U;
-    sequence_count = *req++;
-    while (sequence_count--)
-    {
-        sequence_info = *req++;
-        count = sequence_info & SWD_SEQUENCE_CLK;
-        if (count == 0U)
-        {
-            count = 64U;
-        }
-//				if ((sequence_info & SWD_SEQUENCE_DIN) != 0U)
-//				{//input
-//						SWD_IN_Sequence(count,res);
-//						count = (count + 7U) / 8U;
-//            //request_count++;
+//static UINT8I DAP_SWD_Sequence(const UINT8 *req, UINT8 *res)
+//{
+//    UINT8I sequence_info;
+//    UINT8I sequence_count;
+//    //UINT8I request_count;
+//	UINT8I request_count;
+//    UINT8I response_count;
+//    UINT8I count;
+//
+//    *res++ = DAP_OK;
+//
+//    //request_count = 1U;
+//    response_count = 1U;
+//    sequence_count = *req++;
+//    while (sequence_count--)
+//    {
+//        sequence_info = *req++;
+//        count = sequence_info & SWD_SEQUENCE_CLK;
+//        if (count == 0U)
+//        {
+//            count = 64U;
+//        }
+////				if ((sequence_info & SWD_SEQUENCE_DIN) != 0U)
+////				{//input
+////						SWD_IN_Sequence(count,res);
+////						count = (count + 7U) / 8U;
+////            //request_count++;
+////            res += count;
+////            response_count += count;
+////				}
+////				else
+////				{//output
+////						SWJ_Sequence(count,req);
+////						count = (count + 7U) / 8U;
+////						req += count;
+////						//request_count += count + 1U;
+////				}
+//        count = (count + 7U) / 8U;
+//        if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
+//             SWD = 1;
+//        } else {
+//             SWD = 0;
+//        }
+//        SWD_Sequence(sequence_info, req, res);
+//        if (sequence_count == 0U) {
+//             SWD = 0;
+//        }
+//        if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
+//            request_count++;
 //            res += count;
 //            response_count += count;
-//				}
-//				else
-//				{//output
-//						SWJ_Sequence(count,req);
-//						count = (count + 7U) / 8U;
-//						req += count;
-//						//request_count += count + 1U;
-//				}
-        count = (count + 7U) / 8U;
-        if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
-             SWD = 1;
-        } else {
-             SWD = 0;
-        }
-        SWD_Sequence(sequence_info, req, res);
-        if (sequence_count == 0U) {
-             SWD = 0;
-        }
-        if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
-            request_count++;
-            res += count;
-            response_count += count;
-        } else {
-            req += count;
-            request_count += count + 1U;
-        }
-    }
-    return response_count;
-}
+//        } else {
+//            req += count;
+//            request_count += count + 1U;
+//        }
+//    }
+//    return response_count;
+//}
 
 // Process Transfer Configure command and prepare response
 //   request:  pointer to request datas
@@ -493,7 +489,7 @@ static UINT8I DAP_TransferConfigure(const UINT8 *req, UINT8 *res)
 
 //#define 
 
-UINT8I datas[4];
+UINT8 datas[4];
 UINT8I match_mask[4];
 UINT8I match_value[4];
 UINT8I DAP_TransferAbort = 0U;

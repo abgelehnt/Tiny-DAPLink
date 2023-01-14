@@ -15,6 +15,8 @@ BOOL Keyboard_Flag = 0;
 UINT8I TargetKey;
 
 void Keyboard_Press(void){
+	if(TargetKey == 0xFF)
+		return;
 	Keyboard_Flag = 0;
 	Ep4Buffer[2] = TargetKey;
 	UEP4_T_LEN = 8;                                             //上传数据长度
