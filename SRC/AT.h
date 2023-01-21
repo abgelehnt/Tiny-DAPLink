@@ -16,6 +16,6 @@ extern BOOL TO_IAP;
 								if((x)[1]>='0' && (x)[1] <= '9'){target += (x)[1]-'0';}			\
 								else{target += (x)[1]-'A'+10;}
 
-UINT8 AT_Process(PUINT8 Uart_TxBuff);
+UINT8 AT_Process(UINT8 xdata * Uart_TxBuff);
 
 #endif //_AT_H

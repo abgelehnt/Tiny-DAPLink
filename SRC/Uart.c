@@ -58,7 +58,7 @@ void Config_Uart0(UINT8 *cfg_uart)
 }
 
 
-void Uart0_ISR(void) interrupt INT_NO_UART0 using 1{
+void Uart0_ISR(void) interrupt INT_NO_UART0{
 	if (TI){
 		if(Uart_TxDealingWhich){ // Uart_TxBuff1
 			if(Uart_TxPointer < Uart_TxBuff1Length){

@@ -242,7 +242,7 @@ void USBDeviceInit()
 typedef void( *goISP)( void );
 goISP ISP_ADDR=0x3800;
 
-void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄存器组1
+void DeviceInterrupt(void) interrupt INT_NO_USB //USB中断服务程序,使用寄存器组1
 {
     UINT8 len;
     if (UIF_TRANSFER) //USB传输完成标志
@@ -641,7 +641,6 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄
 
 UINT8 LED_Timer;
 
-
 void main(void)
 {
     CfgFsys();   //CH559时钟选择配置
@@ -694,17 +693,14 @@ void main(void)
 		if(DAP_LED_BUSY)
 		{
 			LED = 1;
-			LED_Timer = 0;
 		}
 		else
 		{
 			LED_Timer++;
-			if(LED_Timer==0x10)
+			if(LED_Timer==0x09)
 			{
-
 				LED = 0;
-			}							
-			if(LED_Timer==0xF0)
+			}else if(LED_Timer==0xFF)
 			{
 				LED_Timer = 0;
 				LED = 1;

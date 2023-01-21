@@ -27,7 +27,9 @@
 
 #include "DAP.h"
 
-#define SW_CLOCK_CYCLE() SWK = 0;SWK = 1;
+#include "intrins.h"
+
+#define SW_CLOCK_CYCLE() SWK = 0;_nop_();_nop_();SWK = 1;
 
 #define SW_WRITE_BIT(bits) SWD = (bits)&1; SWK = 0; SWK = 1;
 
@@ -37,7 +39,12 @@
 
 #define PIN_SWDIO_OUT_DISABLE() P1_MOD_OC |= (1 << 5);
  
+#define PIN_SPI_ENABLE() SPI0_CTRL = 0x68;
 
+#define PIN_SPI_DISABLE() SPI0_CTRL = 0x08;
+
+#define PIN_SPI_WRITE(x) SPI0_DATA = (x); \
+							while(S0_FREE == 0);
 
 /** Setup SWD I/O pins: SWCLK, SWDIO, and nRESET.
 Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
@@ -75,6 +82,10 @@ void PORT_SWD_SETUP(void)
     DIR_SWD = 1;	
     P3_MOD_OC = P3_MOD_OC & ~(1 << 2);
     P3_DIR_PU = P3_DIR_PU | (1 << 2);
+
+	SPI0_SETUP = 8;
+	SPI0_CTRL = 0x08;
+	SPI0_CK_SE = 12;
 }
 
 void PORT_SWD_OFF(void)
@@ -198,7 +209,7 @@ void SWD_Sequence(UINT8I info, const UINT8 *swdo, UINT8 *swdi)
 //   request: A[3:2] RnW APnDP
 //   datas:    DATA[31:0]
 //   return:  ACK[2:0]
-UINT8 SWD_Transfer(UINT8 req, UINT8 *datas)
+UINT8 SWD_Transfer(UINT8 req, char data * datas)
 {
     UINT8 ack;
     UINT8 bits;
@@ -207,24 +218,14 @@ UINT8 SWD_Transfer(UINT8 req, UINT8 *datas)
 
     UINT8 m, n;
 
+	bit bi;
+	SWD = 1;
     /* Packet req */
-    parity = 0U;
-    SW_WRITE_BIT(1U); /* Start Bit */
-    bits = req >> 0;
-    SW_WRITE_BIT(bits); /* APnDP Bit */
-    parity += bits;
-    bits = req >> 1;
-    SW_WRITE_BIT(bits); /* RnW Bit */
-    parity += bits;
-    bits = req >> 2;
-    SW_WRITE_BIT(bits); /* A2 Bit */
-    parity += bits;
-    bits = req >> 3;
-    SW_WRITE_BIT(bits); /* A3 Bit */
-    parity += bits;
-    SW_WRITE_BIT(parity); /* Parity Bit */
-    SW_WRITE_BIT(0U);     /* Stop Bit */
-    SW_WRITE_BIT(1U);     /* Park Bit */
+	ACC = req&0x0f;
+    parity = P;
+	PIN_SPI_ENABLE();
+	PIN_SPI_WRITE(0x81 | (parity) << 5 | (req&0x0f) << 1);
+	PIN_SPI_DISABLE();
 
     /* Turnaround */
 	PIN_SWDIO_OUT_DISABLE();
@@ -255,17 +256,21 @@ UINT8 SWD_Transfer(UINT8 req, UINT8 *datas)
                 for (n = 8U; n; n--)
                 {
                     SW_READ_BIT(bits); /* Read RDATA[0:31] */
-                    parity += bits;
                     val >>= 1;
                     val |= bits << 7;
                 }
+				ACC = val;
+				parity |= P;
+				parity <<= 1;
                 if (datas)
                 {
                     datas[m] = val;
                 }
             }
+			ACC = parity;
+			bi = P;
             SW_READ_BIT(bits); /* Read Parity */
-            if ((parity ^ bits) & 1U)
+            if ((bi ^ bits) & 1U)
             {
                 ack = DAP_TRANSFER_ERROR;
             }
@@ -287,17 +292,19 @@ UINT8 SWD_Transfer(UINT8 req, UINT8 *datas)
 			PIN_SWDIO_OUT_ENABLE();
             /* Write datas */
             parity = 0U;
+
+			PIN_SPI_ENABLE();
             for (m = 0; m < 4; m++)
             {
-                val = datas[m];
-                for (n = 8U; n; n--)
-                {
-                    SW_WRITE_BIT(val); /* Write WDATA[0:31] */
-                    parity += val;
-                    val >>= 1;
-                }
+				SPI0_DATA = datas[m];
+				ACC = datas[m];
+				parity |= P;
+				parity <<= 1;
+				while(S0_FREE == 0);
             }
-            SW_WRITE_BIT(parity); /* Write Parity Bit */
+			PIN_SPI_DISABLE();
+			ACC = parity;
+            SW_WRITE_BIT(P); /* Write Parity Bit */
         }
         /* Idle cycles */
         n = idle_cycles;
