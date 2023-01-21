@@ -14,7 +14,7 @@
 
 BOOL TO_IAP;
 
-UINT8 AT_Process(char * Uart_TxBuff){
+UINT8 AT_Process(char xdata * Uart_TxBuff){
 	if(!strncmp("AT",Uart_TxBuff,2)){
 		if(!strncmp("RST",&Uart_TxBuff[3],3)){
 			EA = 0;
