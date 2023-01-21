@@ -4,7 +4,7 @@
 #include "Uart.h"
 #include "Timer.H"
 #include "AT.h"
-#include "TouchKey.h"
+#include "TouchKey.H"
 #include "Keyboard.h"
 #include "DataFlash.H"
 

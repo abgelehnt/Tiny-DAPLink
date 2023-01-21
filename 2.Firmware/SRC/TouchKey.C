@@ -8,7 +8,7 @@
 #include "CH552.H"                                                          
 #include "Debug.H"
 #include "stdio.H"
-#include "TOUCHKEY.H"
+#include "TouchKey.H"
 #include "Uart.h"
 #include "AT.h"
 #include "Keyboard.h"

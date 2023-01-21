@@ -1,5 +1,5 @@
 #include "CH552.H"
-#include "Uart.H"
+#include "Uart.h"
 #include "Debug.H"
 #include "AT.h"
 

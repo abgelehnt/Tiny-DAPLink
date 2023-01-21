@@ -6,7 +6,7 @@
 #include "AT.h"
 
 #include "Uart.h"
-#include "TouchKey.h"
+#include "TouchKey.H"
 #include "DataFlash.H"
 #include "Keyboard.h"
 
