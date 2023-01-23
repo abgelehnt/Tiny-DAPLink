@@ -620,16 +620,10 @@ void DeviceInterrupt(void) interrupt INT_NO_USB //USB中断服务程序,使用寄存器组1
         UIF_SUSPEND = 0;
         if (USB_MIS_ST & bUMS_SUSPEND) //挂起
         {
-			LED = 0;
 			while ( XBUS_AUX & bUART0_TX )
 				;									// wait until uart0 complete transmitting.
-			SAFE_MOD = 0x55;
-			SAFE_MOD = 0xAA;
-			WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO;	//USB or RXD0 can wake it up 
+			LED = 0;
 			PCON |= PD;								//sleep
-			SAFE_MOD = 0x55;
-			SAFE_MOD = 0xAA;
-			WAKE_CTRL = 0x00;
         }
     }
     else
@@ -657,6 +651,10 @@ void main(void)
 	TK_Init( BIT4,1,0 );
 	ReadDataFlash(0,1,&TargetKey);
 	memset(Ep4Buffer,0,8);
+
+	SAFE_MOD = 0x55;
+	SAFE_MOD = 0xAA;
+	WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO;	//USB or RXD0 can wake it up
 	
 	
     EA = 1;          //允许单片机中断
@@ -709,9 +707,10 @@ void main(void)
 		}
 
 		if(TO_IAP) {
+			EA = 0;
 			USB_CTRL = 0;
 			UDEV_CTRL = 0x80;
-			mDelaymS(10);
+			mDelaymS(100);
 			(ISP_ADDR)();
 		}
     }
