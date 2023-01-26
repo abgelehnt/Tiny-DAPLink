@@ -35,9 +35,9 @@
 
 #define SW_READ_BIT(bits)  SWK = 0; bits = SWD; SWK = 1;
 
-#define PIN_SWDIO_OUT_ENABLE() P1_MOD_OC &= ~(1 << 5);
+#define PIN_SWDIO_OUT_ENABLE() P1_MOD_OC &= ~(1 << 5); DIR_SWD = 1;
 
-#define PIN_SWDIO_OUT_DISABLE() P1_MOD_OC |= (1 << 5);
+#define PIN_SWDIO_OUT_DISABLE() P1_MOD_OC |= (1 << 5); DIR_SWD = 0;
  
 #define PIN_SPI_ENABLE() SPI0_CTRL = 0x68;
 
