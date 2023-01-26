@@ -12,6 +12,6 @@
 | DAT+RST     | 重启调试器                                                                                        |
 | DAT+IAP     | 进入调试器固件下载模式                                                                                  |
 | DAT+KEY?    | 查询电容键盘映射的按键                                                                                  |
-| DAT+KEY=XX  | 更改电容键盘映射的按键[USB CDC键盘键值表](https://github.com/abgelehnt/Tiny-DAPLink/blob/main/3.Docs/Keyboard_HID.txt) |
+| DAT+KEY=XX  | 更改电容键盘映射的按键[USB CDC键盘键值表](3.Docs/Keyboard_HID.txt) |
 | DAT+KEY=FF  | 关闭电容键盘功能                                                                                     |
 | DAT+AUTHOR? | 查询作者信息                                                                                       |
