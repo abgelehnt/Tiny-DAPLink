@@ -64,7 +64,7 @@ UINT8 AT_Process(char xdata * Uart_TxBuff){
 			Uart_RxDealingWhich = ~Uart_RxDealingWhich;
 		}else if(!strncmp("KEY=",&Uart_TxBuff[0],4)){
 			UINT8 x;
-			ASCII_TO_HEX(x,&Uart_TxBuff[7]);
+			ASCII_TO_HEX(x,&Uart_TxBuff[4]);
 			WriteDataFlash(0,&x,1);
 			TargetKey = x;
 		}else if(!strncmp("KEY?",&Uart_TxBuff[0],4)){

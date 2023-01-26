@@ -1,20 +1,17 @@
-# CH55x_HS_DAP-Link-v2
-基于CH55x低成本USB单片机实现的汇编级优化高速DAP-Link-v2
+# Tiny-DAPLink
 
-介绍见：开源CH551/2实现的汇编优化高速DAP-Link (CMSIS-DAP v2)https://whycan.com/t_7786.html
+> 小巧的使用CH552实现的DAPLink
 
-SWD引脚 P1.5和P1.6需并联
+详见[Tiny-DAPLink：开源CH552实现的CMSIS-DAP v2升级版](TODO)
 
-SWC引脚 P1.5
+## DAT命令列表
+使用任意串口工具发送特定的命令即可对Tiny-DAPLink进行相应的设置。
 
-串口引脚 P3.0 P3.1
-
-5V下使用应该接1T45电平转换芯片 SWC-DIR P3.4 SWD-DIR P3.2
-
-LED P1.1
-
-复位1.4（接三极管）
-
-拉高RST重新进ISP
-
-使用3.3V供电时需要将两个供电脚短接（CH55xG的15和16脚）一坨锡
+| 命令        | 描述                                                                                           |
+| :---------- |:---------------------------------------------------------------------------------------------|
+| DAT+RST     | 重启调试器                                                                                        |
+| DAT+IAP     | 进入调试器固件下载模式                                                                                  |
+| DAT+KEY?    | 查询电容键盘映射的按键                                                                                  |
+| DAT+KEY=XX  | 更改电容键盘映射的按键[USB CDC键盘键值表](https://github.com/abgelehnt/Tiny-DAPLink/3.Docs/Keyboard_HID.txt) |
+| DAT+KEY=FF  | 关闭电容键盘功能                                                                                     |
+| DAT+AUTHOR? | 查询作者信息                                                                                       |

@@ -5,16 +5,16 @@
 
 UINT8X Uart_TxBuff0[64] _at_ 0x0300;
 BOOL Uart_TxBuff0Used;
-UINT8I Uart_TxBuff0Length;
+UINT8 Uart_TxBuff0Length;
 UINT8X Uart_TxBuff1[64] _at_ 0x0340;
 BOOL Uart_TxBuff1Used;
-UINT8I Uart_TxBuff1Length;
+UINT8 Uart_TxBuff1Length;
 UINT8X Uart_RxBuff0[64] _at_ 0x0380;
 BOOL Uart_RxBuff0Used;
 UINT8X Uart_RxBuff1[64] _at_ 0x03C0;
 BOOL Uart_RxBuff1Used;
-UINT8I Uart_TxPointer;
-UINT8I Uart_RxPointer;
+UINT8 Uart_TxPointer;
+UINT8 Uart_RxPointer;
 BOOL Uart_TxDealingWhich;
 BOOL Uart_RxDealingWhich;
 
@@ -59,6 +59,28 @@ void Config_Uart0(UINT8 *cfg_uart)
 
 
 void Uart0_ISR(void) interrupt INT_NO_UART0{
+	if (RI){
+		if(Uart_RxDealingWhich){ // Uart_RxBuff1
+			Uart_RxBuff1Used = 1;
+			Uart_RxBuff1[Uart_RxPointer++] = SBUF;
+			if (!Uart_RxBuff0Used){
+				UEP1_T_LEN = Uart_RxPointer;
+				Uart_RxPointer = 0;
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;
+				Uart_RxDealingWhich = 0;
+			}
+		}else{
+			Uart_RxBuff0Used = 1;
+			Uart_RxBuff0[Uart_RxPointer++] = SBUF;
+			if (!Uart_RxBuff1Used){
+				UEP1_T_LEN = Uart_RxPointer;
+				Uart_RxPointer = 0;
+				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;
+				Uart_RxDealingWhich = 1;
+			}
+		}
+		RI = 0;
+	}
 	if (TI){
 		if(Uart_TxDealingWhich){ // Uart_TxBuff1
 			if(Uart_TxPointer < Uart_TxBuff1Length){
@@ -86,28 +108,6 @@ void Uart0_ISR(void) interrupt INT_NO_UART0{
 			}
 		}
 		TI = 0;
-	}
-	if (RI){
-		if(Uart_RxDealingWhich){ // Uart_RxBuff1
-			Uart_RxBuff1Used = 1;
-			Uart_RxBuff1[Uart_RxPointer++] = SBUF;
-			if (!Uart_RxBuff0Used){
-				UEP1_T_LEN = Uart_RxPointer;
-				Uart_RxPointer = 0;
-				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;
-				Uart_RxDealingWhich = 0;
-			}
-		}else{
-			Uart_RxBuff0Used = 1;
-			Uart_RxBuff0[Uart_RxPointer++] = SBUF;
-			if (!Uart_RxBuff1Used){
-				UEP1_T_LEN = Uart_RxPointer;
-				Uart_RxPointer = 0;
-				UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK;
-				Uart_RxDealingWhich = 1;
-			}
-		}
-		RI = 0;
 	}
 }
 
