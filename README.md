@@ -2,7 +2,7 @@
 
 > 小巧的使用CH552实现的DAPLink
 
-详见[Tiny-DAPLink：开源CH552实现的CMSIS-DAP v2升级版](TODO)
+详见[Tiny-DAPLink：开源CH552实现的CMSIS-DAP v2升级版](https://whycan.com/t_9365.html)
 
 ## DAT命令列表
 使用任意串口工具发送特定的命令即可对Tiny-DAPLink进行相应的设置。
