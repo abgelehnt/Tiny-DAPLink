@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name "Daplink_Library")(type "KiCad")(uri "${KIPRJMOD}/Daplink_Library.pretty")(options "")(descr ""))
+)

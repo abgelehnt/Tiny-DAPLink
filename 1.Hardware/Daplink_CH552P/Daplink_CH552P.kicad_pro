@@ -349,9 +349,7 @@
     }
   },
   "libraries": {
-    "pinned_footprint_libs": [
-      "KiCad库"
-    ],
+    "pinned_footprint_libs": [],
     "pinned_symbol_libs": []
   },
   "meta": {
