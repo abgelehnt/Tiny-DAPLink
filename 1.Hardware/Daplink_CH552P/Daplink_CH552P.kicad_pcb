@@ -194,7 +194,7 @@
       (net 11 "/KEY_CAP") (pinfunction "SHIELD") (pintype "passive") (tstamp b93f07b1-53bb-4676-9786-9917851eee50))
     (pad "S1" thru_hole oval (at -4.32 1.05 270) (size 1 1.6) (drill oval 0.6 1.2) (layers *.Cu *.Mask)
       (net 11 "/KEY_CAP") (pinfunction "SHIELD") (pintype "passive") (tstamp ca616e07-b0d6-417f-abaf-c18905a24808))
-    (model "${KICAD6_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_HRO_TYPE-C-31-M-12.wrl"
+    (model "${KICAD6_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal.wrl"
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
@@ -353,7 +353,7 @@
       (net 1 "+5V") (pinfunction "VCC") (pintype "power_in") (tstamp 7a5c3624-bc6a-4166-ac94-d78bf4a8af2e))
     (pad "16" smd roundrect (at 2.5 -4.445 180) (size 2 0.6) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25)
       (net 3 "Net-(C2-Pad2)") (pinfunction "V33") (pintype "passive") (tstamp a560a8c8-adff-4cfb-97cb-ed1cbc3bc551))
-    (model "${KICAD6_3DMODEL_DIR}/Package_SO.3dshapes/SOP-16_3.9x9.9mm_P1.27mm.wrl"
+    (model "${KICAD6_3DMODEL_DIR}/Package_SO.3dshapes/SOP-16_4.4x10.4mm_P1.27mm.wrl"
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
