@@ -706,6 +706,8 @@ void main(void)
 			TK_Measure();
 		}
 
+		LED2 = XBUS_AUX & (bUART0_TX | bUART0_RX);
+
 		if(TO_IAP) {
 			EA = 0;
 			USB_CTRL = 0;

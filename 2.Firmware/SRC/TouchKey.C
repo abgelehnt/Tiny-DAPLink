@@ -29,7 +29,7 @@ Input channel as below:
 *******************************************************************************/
 	
 UINT8 	TK_Code[TOUCH_NUM] = {								/* Arrange the input channel */			
-	0x03, 															  /* CH2 */
+	0x02, 															  /* CH2 */
 };		
 
 UINT16 	Key_FreeBuf[TOUCH_NUM];

@@ -64,24 +64,16 @@ void PORT_SWD_SETUP(void)
     P1_MOD_OC = P1_MOD_OC & ~(1 << 5);
     P1_DIR_PU = P1_DIR_PU | (1 << 5);
     SWD = 1;
-	
-	//Input
-    P1_MOD_OC = P1_MOD_OC & ~(1 << 6);
-    P1_DIR_PU = P1_DIR_PU & ~(1 << 6);
     
     //ÍÆÍìÊä³ö
     RST = 0;
     P1_MOD_OC = P1_MOD_OC & ~(1 << 4);
     P1_DIR_PU = P1_DIR_PU | (1 << 4);
-	
-		//1T45_DIR_SWK -Output
-    DIR_SWK = 1;	
-    P3_MOD_OC = P3_MOD_OC & ~(1 << 4);
-    P3_DIR_PU = P3_DIR_PU | (1 << 4);
-		//1T45_DIR_SWD -Output
+
+	//1T45_DIR_SWD - Output
     DIR_SWD = 1;	
-    P3_MOD_OC = P3_MOD_OC & ~(1 << 2);
-    P3_DIR_PU = P3_DIR_PU | (1 << 2);
+    P3_MOD_OC = P3_MOD_OC & ~(1 << 6);
+    P3_DIR_PU = P3_DIR_PU | (1 << 6);
 
 	SPI0_SETUP = 8;
 	SPI0_CTRL = 0x08;
@@ -96,7 +88,6 @@ void PORT_SWD_OFF(void)
     P1_DIR_PU = P1_DIR_PU & ~(1 << 5);
     P1_MOD_OC = P1_MOD_OC & ~(1 << 7);
     P1_DIR_PU = P1_DIR_PU & ~(1 << 7);
-    DIR_SWK = 0;
     DIR_SWD = 0;	
 }
 
