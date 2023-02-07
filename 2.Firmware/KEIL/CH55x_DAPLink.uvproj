@@ -387,11 +387,6 @@
               <FilePath>..\SRC\Debug.C</FilePath>
             </File>
             <File>
-              <FileName>Main_Usb.C</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SRC\Main_Usb.C</FilePath>
-            </File>
-            <File>
               <FileName>SW_DP.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SRC\SW_DP.c</FilePath>
@@ -458,6 +453,16 @@
                   </Ax51>
                 </File51>
               </FileOption>
+            </File>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SRC\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>Usb.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SRC\Usb.C</FilePath>
             </File>
           </Files>
         </Group>

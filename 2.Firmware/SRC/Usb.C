@@ -1,4 +1,4 @@
-#include "CH552.H"
+#include "Usb.h"
 #include "Debug.H"
 #include "DAP.h"
 #include "Uart.h"
@@ -7,11 +7,6 @@
 #include "TouchKey.H"
 #include "Keyboard.h"
 #include "DataFlash.H"
-
-#define Fullspeed 1
-#define WINUSB 1
-#define THIS_ENDP0_SIZE 64
-#define ENDP4_IN_SIZE 8
 
 UINT8X Ep0Buffer[THIS_ENDP0_SIZE] _at_ 0x0000;  //端点0 OUT&IN缓冲区，必须是偶地址
 
@@ -38,7 +33,7 @@ UINT8I Ep3Is[DAP_PACKET_COUNT]; //发送包长
 
 PUINT8 pDescr; //USB配置标志
 BOOL Endp3Busy = 0;
-UINT8I SetupReq, SetupLen, Ready, Count, UsbConfig;
+UINT8I SetupReq, SetupLen, UsbConfig;
 #define UsbSetupBuf ((PUSB_SETUP_REQ)Ep0Buffer)
 
 UINT8C DevDesc[] =
@@ -47,6 +42,7 @@ UINT8C DevDesc[] =
     0x28, 0x0D, 0x04, 0x02, 0x00, 0x01, 0x01, 0x02,
     0x03, 0x01
 };
+
 UINT8C CfgDesc[] =
 {
 //					wTotalLength	bNumInterfaces
@@ -76,14 +72,17 @@ UINT8C CfgDesc[] =
 };
 
 UINT16I USB_STATUS = 0;
+
 //cdc参数
 UINT8I LineCoding[7] = {0x00, 0xe1, 0x00, 0x00, 0x00, 0x00, 0x08}; //初始化波特率为57600，1停止位，无校验，8数据位。
 
 /*字符串描述符 略*/
 // 语言描述符
 UINT8C MyLangDescr[] = {0x04, 0x03, 0x09, 0x04};
+
 // 厂家信息:ARM
 UINT8C MyManuInfo[] = {0x08, 0x03, 'A', 0x00, 'R', 0x00, 'M', 0x00};
+
 // 产品信息: DAPLink CMSIS-DAP
 UINT8C MyProdInfo[] =
 {
@@ -110,20 +109,22 @@ UINT8C MyInterface[] =
     'C', 0, 'M', 0, 'S', 0, 'I', 0, 'S', 0, '-', 0, 'D', 0, 'A', 0,
     'P', 0, ' ', 0, 'v', 0, '2', 0
 };
+
 // 接口：USB-CDC
 UINT8C CDC_String[] =
 {
     30,
     0x03,
-    'D', 0, 'A', 0, 'P', 0, 'L', 0, 'i', 0, 'n', 0, 'k', 0, '-', 0, 
+    'D', 0, 'A', 0, 'P', 0, 'L', 0, 'i', 0, 'n', 0, 'k', 0, '-', 0,
 	'C', 0, 'D', 0, 'C', 0, 'E', 0, 'x', 0, 't', 0
 };
+
 // 接口：DAPLink-Keyboard
 UINT8C Keyboard_String[] =
 {
     34,
     0x03,
-    'D', 0, 'A', 0, 'P', 0, 'L', 0, 'i', 0, 'n', 0, 'k', 0, '-', 0, 
+    'D', 0, 'A', 0, 'P', 0, 'L', 0, 'i', 0, 'n', 0, 'k', 0, '-', 0,
 	'K', 0, 'e', 0, 'y', 0, 'b', 0, 'o', 0, 'a', 0, 'r', 0, 'd', 0
 };
 
@@ -237,10 +238,16 @@ void USBDeviceInit()
     USB_INT_FG = 0xFF;                                     // 清中断标志
     USB_INT_EN = bUIE_SUSPEND | bUIE_TRANSFER | bUIE_BUS_RST;
     IE_USB = 1;
-}
 
-typedef void( *goISP)( void );
-goISP ISP_ADDR=0x3800;
+	UEP1_T_LEN = 0;  //预使用发送长度一定要清空
+	UEP2_T_LEN = 0;  //预使用发送长度一定要清空
+
+	Ep2Oi = 0;
+	Ep2Oo = 0;
+	Ep3Ii = 0;
+	Ep3Io = 0;
+	Endp3Busy = 0;
+}
 
 void DeviceInterrupt(void) interrupt INT_NO_USB //USB中断服务程序,使用寄存器组1
 {
@@ -293,166 +300,136 @@ void DeviceInterrupt(void) interrupt INT_NO_USB //USB中断服务程序,使用寄存器组1
                 SetupReq = UsbSetupBuf->bRequest;
                 switch (UsbSetupBuf->bRequestType & USB_REQ_TYP_MASK)
                 {
-					case USB_REQ_TYP_STANDARD:
-						switch (SetupReq) //请求码
-						{
-							case USB_GET_DESCRIPTOR:
-								switch (UsbSetupBuf->wValueH){
-								case 1:             //设备描述符
-									pDescr = DevDesc; //把设备描述符送到要发送的缓冲区
-									len = sizeof(DevDesc);
-									break;
-								case 2:             //配置描述符
-									pDescr = CfgDesc; //把设备描述符送到要发送的缓冲区
-									len = sizeof(CfgDesc);
-									break;
-								case 3: // 字符串描述符
-									switch (UsbSetupBuf->wValueL)
-									{
-										case 0:
-											pDescr = (PUINT8)(&MyLangDescr[0]);
-											len = sizeof(MyLangDescr);
-											break;
-										case 1:
-											pDescr = (PUINT8)(&MyManuInfo[0]);
-											len = sizeof(MyManuInfo);
-											break;
-										case 2:
-											pDescr = (PUINT8)(&MyProdInfo[0]);
-											len = sizeof(MyProdInfo);
-											break;
-										case 3:
-											HEX_TO_ASCII(SerNumber[2],*(UINT8C *)(0x3FFC)/16);
-											HEX_TO_ASCII(SerNumber[4],*(UINT8C *)(0x3FFC)%16);
-											HEX_TO_ASCII(SerNumber[6],*(UINT8C *)(0x3FFD)/16);
-											HEX_TO_ASCII(SerNumber[8],*(UINT8C *)(0x3FFD)%16);
-											
-											HEX_TO_ASCII(SerNumber[10],*(UINT8C *)(0x3FFE)/16);
-											HEX_TO_ASCII(SerNumber[12],*(UINT8C *)(0x3FFE)%16);
-											HEX_TO_ASCII(SerNumber[14],*(UINT8C *)(0x3FFF)/16);
-											HEX_TO_ASCII(SerNumber[16],*(UINT8C *)(0x3FFF)%16);
-											
-											pDescr = SerNumber;
-											len = sizeof(SerNumber);
-											break;
-										case 4:
-											pDescr = (PUINT8)(&MyInterface[0]);
-											len = sizeof(MyInterface);
-											break;
-										case 5:
-											pDescr = (PUINT8)(&CDC_String[0]);
-											len = sizeof(CDC_String);
-											break;
-										case 6:
-											pDescr = (PUINT8)(&Keyboard_String[0]);
-											len = sizeof(Keyboard_String);
-											break;
-										default:
-											len = 0xFF; // 不支持的字符串描述符
-											break;
-									}
-									break;
-								case 15:
-									pDescr = (PUINT8)(&USB_BOSDescriptor[0]);
-									len = sizeof(USB_BOSDescriptor);
-									break;
-								case 0x22:                                          //报表描述符
-									if(UsbSetupBuf->wIndexL == 2)                   //接口0报表描述符
-									{
-										pDescr = KeyRepDesc;                        //数据准备上传
-										len = sizeof(KeyRepDesc);
-									}
-									else
-									{
-										len = 0xff;           //本程序只有2个接口，这句话正常不可能执行
-									}
-									break;
-								default:
-									len = 0xff; //不支持的命令或者出错
-									break;
-							}
-							break;
-						case USB_SET_ADDRESS:
-							SetupLen = UsbSetupBuf->wValueL; //暂存USB设备地址
-							break;
-						case USB_GET_CONFIGURATION:
-							Ep0Buffer[0] = UsbConfig;
-							if (SetupLen >= 1)
-							{
-								len = 1;
-							}
-							break;
-						case USB_SET_CONFIGURATION:
-							UsbConfig = UsbSetupBuf->wValueL;
-							if (UsbConfig)
-							{
-								Ready = 1; //set config命令一般代表usb枚举完成的标志
-							}
-							break;
-						case 0x0A:
-							break;
-						case USB_CLEAR_FEATURE:                                                       //Clear Feature
-							if ((UsbSetupBuf->bRequestType & USB_REQ_RECIP_MASK) == USB_REQ_RECIP_ENDP) // 端点
-							{
-								switch (UsbSetupBuf->wIndexL)
+				case USB_REQ_TYP_STANDARD:
+					switch (SetupReq) //请求码
+					{
+						case USB_GET_DESCRIPTOR:
+							switch (UsbSetupBuf->wValueH){
+							case 1:             //设备描述符
+								pDescr = DevDesc; //把设备描述符送到要发送的缓冲区
+								len = sizeof(DevDesc);
+								break;
+							case 2:             //配置描述符
+								pDescr = CfgDesc; //把设备描述符送到要发送的缓冲区
+								len = sizeof(CfgDesc);
+								break;
+							case 3: // 字符串描述符
+								switch (UsbSetupBuf->wValueL)
 								{
-								case 0x82:
-									UEP2_CTRL = UEP2_CTRL & ~(bUEP_T_TOG | MASK_UEP_T_RES) | UEP_T_RES_NAK;
-									break;
-								case 0x81:
-									UEP1_CTRL = UEP1_CTRL & ~(bUEP_T_TOG | MASK_UEP_T_RES) | UEP_T_RES_NAK;
-									break;
-								case 0x02:
-									UEP2_CTRL = UEP2_CTRL & ~(bUEP_R_TOG | MASK_UEP_R_RES) | UEP_R_RES_ACK;
-									break;
-								default:
-									len = 0xFF; // 不支持的端点
-									break;
+									case 0:
+										pDescr = (PUINT8)(&MyLangDescr[0]);
+										len = sizeof(MyLangDescr);
+										break;
+									case 1:
+										pDescr = (PUINT8)(&MyManuInfo[0]);
+										len = sizeof(MyManuInfo);
+										break;
+									case 2:
+										pDescr = (PUINT8)(&MyProdInfo[0]);
+										len = sizeof(MyProdInfo);
+										break;
+									case 3:
+										HEX_TO_ASCII(SerNumber[2],*(UINT8C *)(0x3FFC)/16);
+										HEX_TO_ASCII(SerNumber[4],*(UINT8C *)(0x3FFC)%16);
+										HEX_TO_ASCII(SerNumber[6],*(UINT8C *)(0x3FFD)/16);
+										HEX_TO_ASCII(SerNumber[8],*(UINT8C *)(0x3FFD)%16);
+
+										HEX_TO_ASCII(SerNumber[10],*(UINT8C *)(0x3FFE)/16);
+										HEX_TO_ASCII(SerNumber[12],*(UINT8C *)(0x3FFE)%16);
+										HEX_TO_ASCII(SerNumber[14],*(UINT8C *)(0x3FFF)/16);
+										HEX_TO_ASCII(SerNumber[16],*(UINT8C *)(0x3FFF)%16);
+
+										pDescr = SerNumber;
+										len = sizeof(SerNumber);
+										break;
+									case 4:
+										pDescr = (PUINT8)(&MyInterface[0]);
+										len = sizeof(MyInterface);
+										break;
+									case 5:
+										pDescr = (PUINT8)(&CDC_String[0]);
+										len = sizeof(CDC_String);
+										break;
+									case 6:
+										pDescr = (PUINT8)(&Keyboard_String[0]);
+										len = sizeof(Keyboard_String);
+										break;
+									default:
+										len = 0xFF; // 不支持的字符串描述符
+										break;
 								}
-							}
-							else
-							{
-								len = 0xFF; // 不是端点不支持
-							}
-							break;
-						case USB_SET_FEATURE:                             /* Set Feature */
-							if ((UsbSetupBuf->bRequestType & 0x1F) == 0x00) /* 设置设备 */
-							{
-								if ((((UINT16)UsbSetupBuf->wValueH << 8) | UsbSetupBuf->wValueL) == 0x01)
+								break;
+							case 15:
+								pDescr = (PUINT8)(&USB_BOSDescriptor[0]);
+								len = sizeof(USB_BOSDescriptor);
+								break;
+							case 0x22:                                          //报表描述符
+								if(UsbSetupBuf->wIndexL == 2)                   //接口0报表描述符
 								{
-									if (CfgDesc[7] & 0x20)
-									{
-										/* 设置唤醒使能标志 */
-									}
-									else
-									{
-										len = 0xFF; /* 操作失败 */
-									}
+									pDescr = KeyRepDesc;                        //数据准备上传
+									len = sizeof(KeyRepDesc);
 								}
 								else
 								{
-									len = 0xFF; /* 操作失败 */
+									len = 0xff;           //本程序只有2个接口，这句话正常不可能执行
 								}
-							}
-							else if ((UsbSetupBuf->bRequestType & 0x1F) == 0x02) /* 设置端点 */
+								break;
+							default:
+								len = 0xff; //不支持的命令或者出错
+								break;
+						}
+						break;
+					case USB_SET_ADDRESS:
+						SetupLen = UsbSetupBuf->wValueL; //暂存USB设备地址
+						break;
+					case USB_GET_CONFIGURATION:
+						Ep0Buffer[0] = UsbConfig;
+						if (SetupLen >= 1)
+						{
+							len = 1;
+						}
+						break;
+					case USB_SET_CONFIGURATION:
+						UsbConfig = UsbSetupBuf->wValueL;
+						if (UsbConfig)
+						{
+							//set config命令一般代表usb枚举完成的标志
+						}
+						break;
+					case 0x0A:
+						break;
+					case USB_CLEAR_FEATURE:                                                       //Clear Feature
+						if ((UsbSetupBuf->bRequestType & USB_REQ_RECIP_MASK) == USB_REQ_RECIP_ENDP) // 端点
+						{
+							switch (UsbSetupBuf->wIndexL)
 							{
-								if ((((UINT16)UsbSetupBuf->wValueH << 8) | UsbSetupBuf->wValueL) == 0x00)
+							case 0x82:
+								UEP2_CTRL = UEP2_CTRL & ~(bUEP_T_TOG | MASK_UEP_T_RES) | UEP_T_RES_NAK;
+								break;
+							case 0x81:
+								UEP1_CTRL = UEP1_CTRL & ~(bUEP_T_TOG | MASK_UEP_T_RES) | UEP_T_RES_NAK;
+								break;
+							case 0x02:
+								UEP2_CTRL = UEP2_CTRL & ~(bUEP_R_TOG | MASK_UEP_R_RES) | UEP_R_RES_ACK;
+								break;
+							default:
+								len = 0xFF; // 不支持的端点
+								break;
+							}
+						}
+						else
+						{
+							len = 0xFF; // 不是端点不支持
+						}
+						break;
+					case USB_SET_FEATURE:                             /* Set Feature */
+						if ((UsbSetupBuf->bRequestType & 0x1F) == 0x00) /* 设置设备 */
+						{
+							if ((((UINT16)UsbSetupBuf->wValueH << 8) | UsbSetupBuf->wValueL) == 0x01)
+							{
+								if (CfgDesc[7] & 0x20)
 								{
-									switch (((UINT16)UsbSetupBuf->wIndexH << 8) | UsbSetupBuf->wIndexL)
-									{
-									case 0x82:
-										UEP2_CTRL = UEP2_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL; /* 设置端点2 IN STALL */
-										break;
-									case 0x02:
-										UEP2_CTRL = UEP2_CTRL & (~bUEP_R_TOG) | UEP_R_RES_STALL; /* 设置端点2 OUT Stall */
-										break;
-									case 0x81:
-										UEP1_CTRL = UEP1_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL; /* 设置端点1 IN STALL */
-										break;
-									default:
-										len = 0xFF; /* 操作失败 */
-										break;
-									}
+									/* 设置唤醒使能标志 */
 								}
 								else
 								{
@@ -463,36 +440,65 @@ void DeviceInterrupt(void) interrupt INT_NO_USB //USB中断服务程序,使用寄存器组1
 							{
 								len = 0xFF; /* 操作失败 */
 							}
-							break;
-						case USB_GET_STATUS:
-							pDescr = (PUINT8)&USB_STATUS;
-							if (SetupLen >= 2)
+						}
+						else if ((UsbSetupBuf->bRequestType & 0x1F) == 0x02) /* 设置端点 */
+						{
+							if ((((UINT16)UsbSetupBuf->wValueH << 8) | UsbSetupBuf->wValueL) == 0x00)
 							{
-								len = 2;
+								switch (((UINT16)UsbSetupBuf->wIndexH << 8) | UsbSetupBuf->wIndexL)
+								{
+								case 0x82:
+									UEP2_CTRL = UEP2_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL; /* 设置端点2 IN STALL */
+									break;
+								case 0x02:
+									UEP2_CTRL = UEP2_CTRL & (~bUEP_R_TOG) | UEP_R_RES_STALL; /* 设置端点2 OUT Stall */
+									break;
+								case 0x81:
+									UEP1_CTRL = UEP1_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL; /* 设置端点1 IN STALL */
+									break;
+								default:
+									len = 0xFF; /* 操作失败 */
+									break;
+								}
 							}
 							else
 							{
-								len = SetupLen;
+								len = 0xFF; /* 操作失败 */
 							}
-							break;
-						default:
-							len = 0xff; //操作失败
-							break;
-                    }
-
-                    break;
-                case USB_REQ_TYP_CLASS: /*HID类命令*/
-                    if ((UsbSetupBuf->bRequestType & USB_REQ_RECIP_MASK) == USB_REQ_RECIP_INTERF)
-                    {
-                        switch (SetupReq)
-                        {
-                        case 0x20://Configure
+						}
+						else
+						{
+							len = 0xFF; /* 操作失败 */
+						}
+						break;
+					case USB_GET_STATUS:
+						pDescr = (PUINT8)&USB_STATUS;
+						if (SetupLen >= 2)
+						{
+							len = 2;
+						}
+						else
+						{
+							len = SetupLen;
+						}
+						break;
+					default:
+						len = 0xff; //操作失败
+						break;
+					}
+					break;
+                case USB_REQ_TYP_CLASS:
+                    if ((UsbSetupBuf->bRequestType & USB_REQ_RECIP_MASK) == USB_REQ_RECIP_INTERF){ // USB CDC
+                        switch (SetupReq){
+                        case 0x20: // Set Line Coding.
+							// 具体参数在下一个OUT包内传输
                             break;
-                        case 0x21://currently configured
+                        case 0x21: // Get Line Coding.
                             pDescr = LineCoding;
                             len = sizeof(LineCoding);
                             break;
-                        case 0x22://generates RS-232/V.24 style control signals
+                        case 0x22: // Set Control Line State
+							DTR = UsbSetupBuf->wValueL & 0x01;
                             break;
                         default:
                             len = 0xFF; /*命令不支持*/
@@ -578,7 +584,7 @@ void DeviceInterrupt(void) interrupt INT_NO_USB //USB中断服务程序,使用寄存器组1
             break;
         case UIS_TOKEN_OUT | 0: // endpoint0 OUT
             len = USB_RX_LEN;
-            if (SetupReq == 0x20) //设置串口属性
+            if (SetupReq == 0x20) // Set Line Coding.
             {
                 if (U_TOG_OK)
                 {
@@ -630,90 +636,5 @@ void DeviceInterrupt(void) interrupt INT_NO_USB //USB中断服务程序,使用寄存器组1
     {
         //意外的中断,不可能发生的情况
         USB_INT_FG = 0xFF; //清中断标志
-    }
-}
-
-UINT8 LED_Timer;
-
-void main(void)
-{
-    CfgFsys();   //CH559时钟选择配置
-    mDelaymS(5); //修改主频等待内部晶振稳定,必加
-   
-    USBDeviceInit(); //USB设备模式初始化
-	UART_Setup();
-    P1_MOD_OC = P1_MOD_OC & ~(1 << 4);
-    P1_DIR_PU = P1_DIR_PU | (1 << 4);
-    P1_MOD_OC = P1_MOD_OC & ~(1 << 5);
-    P1_DIR_PU = P1_DIR_PU | (1 << 5);
-	
-	//Timer2_Init();
-	TK_Init( BIT4,1,0 );
-	ReadDataFlash(0,1,&TargetKey);
-	memset(Ep4Buffer,0,8);
-
-	SAFE_MOD = 0x55;
-	SAFE_MOD = 0xAA;
-	WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO;	//USB or RXD0 can wake it up
-	
-	
-    EA = 1;          //允许单片机中断
-    UEP1_T_LEN = 0;  //预使用发送长度一定要清空
-    UEP2_T_LEN = 0;  //预使用发送长度一定要清空
-    Ready = 0;
-
-    Ep2Oi = 0;
-    Ep2Oo = 0;
-    Ep3Ii = 0;
-    Ep3Io = 0;
-    Endp3Busy = 0;
-	DAP_LED_BUSY = 0;
-	LED_Timer = 0;
-	
-
-	
-    while (!UsbConfig) {;};
-
-    while (1)
-    {
-        DAP_Thread();
-
-        if (Endp3Busy != 1 && Ep3Ii != Ep3Io){
-            Endp3Busy = 1;
-            UEP3_T_LEN = Ep3Is[0];//Ep3Io>>6];
-            UEP3_DMA_L = Ep3Io;
-            
-            UEP3_CTRL = UEP3_CTRL & ~MASK_UEP_T_RES | UEP_T_RES_ACK; //有数据时上传数据并应答ACK
-            Ep3Io += 64;
-        }
-		
-		
-		if(DAP_LED_BUSY)
-		{
-			LED = 1;
-		}
-		else
-		{
-			LED_Timer++;
-			if(LED_Timer==0x09)
-			{
-				LED = 0;
-			}else if(LED_Timer==0xFF)
-			{
-				LED_Timer = 0;
-				LED = 1;
-			}	
-			TK_Measure();
-		}
-
-		LED2 = XBUS_AUX & (bUART0_TX | bUART0_RX);
-
-		if(TO_IAP) {
-			EA = 0;
-			USB_CTRL = 0;
-			UDEV_CTRL = 0x80;
-			mDelaymS(100);
-			(ISP_ADDR)();
-		}
     }
 }
