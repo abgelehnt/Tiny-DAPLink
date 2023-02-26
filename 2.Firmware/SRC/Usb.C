@@ -249,7 +249,7 @@ void USBDeviceInit()
 	Endp3Busy = 0;
 }
 
-void DeviceInterrupt(void) interrupt INT_NO_USB //USB中断服务程序,使用寄存器组1
+void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USB中断服务程序,使用寄存器组1
 {
     UINT8 len;
     if (UIF_TRANSFER) //USB传输完成标志

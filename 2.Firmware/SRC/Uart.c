@@ -42,7 +42,8 @@ void UART_Setup(void)
 	TH1 = 0 - (UINT32)(FREQ_SYS+DEFAULT_UART_BUAD*8) / DEFAULT_UART_BUAD / 16;//12MHz晶振,buad/12为实际需设置波特率
 	TR1 = 1; 																	//启动定时器1
 	SCON = 0x50;//串口0使用模式1    TI = 1;    REN = 1;       
-	ES = 1;	
+	IP |= PS;
+	ES = 1;
 }
 
 void Config_Uart0(UINT8 *cfg_uart)
@@ -58,7 +59,7 @@ void Config_Uart0(UINT8 *cfg_uart)
 }
 
 
-void Uart0_ISR(void) interrupt INT_NO_UART0{
+void Uart0_ISR(void) interrupt INT_NO_UART0 using 2{
 	if (RI){
 		if(Uart_RxDealingWhich){ // Uart_RxBuff1
 			Uart_RxBuff1Used = 1;

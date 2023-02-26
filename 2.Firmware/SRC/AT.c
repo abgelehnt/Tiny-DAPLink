@@ -12,6 +12,8 @@
 
 #include <string.h>
 
+#pragma RB(1)
+
 BOOL TO_IAP;
 
 void CDC_Print(char * targetString){
