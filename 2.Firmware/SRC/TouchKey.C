@@ -6,6 +6,8 @@
 
 UINT16 Key_FreeBuf;
 UINT16 Key_DataBuf;
+UINT16I DOWM_THRESHOLD_VALUE;
+UINT16I UP_THRESHOLD_VALUE;
 bit Press_Flag = 0;
 bit TK_FlashFreeFlag = 0;
 
@@ -18,6 +20,18 @@ void TK_Init(void) {
 	ReadDataFlash(0x10, 2, (UINT8 *) &Key_FreeBuf);
 	if (Key_FreeBuf == 0xFFFF) {
 		TK_FlashKeyBuf();
+	}
+
+	ReadDataFlash(0x12, 2, (UINT8 *) &DOWM_THRESHOLD_VALUE);
+	if(DOWM_THRESHOLD_VALUE == 0xFFFF){
+		DOWM_THRESHOLD_VALUE = 0x400;
+		WriteDataFlash(0x12, (UINT8 *) &DOWM_THRESHOLD_VALUE, 2);
+	}
+
+	ReadDataFlash(0x14, 2, (UINT8 *) &UP_THRESHOLD_VALUE);
+	if(UP_THRESHOLD_VALUE == 0xFFFF){
+		UP_THRESHOLD_VALUE = 0x200;
+		WriteDataFlash(0x14, (UINT8 *) &UP_THRESHOLD_VALUE, 2);
 	}
 }
 

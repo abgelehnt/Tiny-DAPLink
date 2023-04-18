@@ -4,8 +4,6 @@
 #include "CH552.H"
 
 #define SAMPLE_TIMES (0x05)
-#define DOWM_THRESHOLD_VALUE          0x400                      //按下阈值定义
-#define UP_THRESHOLD_VALUE            0x200                        //抬起阈值
 
 extern UINT16 Key_FreeBuf;
 extern UINT16 Key_DataBuf;

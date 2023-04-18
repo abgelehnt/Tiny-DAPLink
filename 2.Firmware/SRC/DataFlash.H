@@ -2,6 +2,10 @@
  * 0x00: Keyboard_Key
  * 0x10: KeyboardH
  * 0x11: KeyboardL
+ * 0x12: DOWM_THRESHOLD_VALUEH
+ * 0x13: DOWM_THRESHOLD_VALUEL
+ * 0x14: UP_THRESHOLD_VALUEH
+ * 0x15: UP_THRESHOLD_VALUEL
 */
 #ifndef	DATAFLASH_H
 #define	DATAFLASH_H
