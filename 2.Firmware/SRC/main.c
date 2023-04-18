@@ -28,7 +28,7 @@ void main(void)
 	UART_Setup();
 
 	//Timer2_Init();
-	TK_Init( BIT4,1,0 );
+	TK_Init();
 	ReadDataFlash(0,1,&TargetKey);
 	memset(Ep4Buffer,0,8);
 
@@ -60,23 +60,27 @@ void main(void)
 
 		if(DAP_LED_BUSY)
 		{
-			LED = 1;
+			LED = 0;
 		}
 		else
 		{
 			LED_Timer++;
 			if(LED_Timer==0x09)
 			{
-				LED = 0;
+				LED = 1;
 			}else if(LED_Timer==0xFF)
 			{
 				LED_Timer = 0;
-				LED = 1;
+				LED = 0;
 			}
 			TK_Measure();
+			if (TK_FlashFreeFlag){
+				TK_FlashKeyBuf();
+				TK_FlashFreeFlag = 0;
+			}
 		}
 
-		LED2 = XBUS_AUX & (bUART0_TX | bUART0_RX);
+		LED2 = !(XBUS_AUX & (bUART0_TX | bUART0_RX));
 
 		if(TO_IAP) {
 			EA = 0;

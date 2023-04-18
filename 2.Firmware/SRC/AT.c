@@ -78,6 +78,24 @@ UINT8 AT_Process(char xdata * Uart_TxBuff){
 			CDC_Print(str);
 		}else if(!strncmp("AUTHOR",&Uart_TxBuff[0],6)){
 			CDC_Print("GitHub:abgelehnt/Tiny-DAPLink\n\r");
+		}else if(!strncmp("KEY_VALUE",&Uart_TxBuff[0],9)){
+			UINT8 str[13] = {0};
+			HEX_TO_ASCII(str[0],Key_FreeBuf/16/16/16);
+			HEX_TO_ASCII(str[1],Key_FreeBuf/16/16%16);
+			HEX_TO_ASCII(str[2],Key_FreeBuf/16%16);
+			HEX_TO_ASCII(str[3],Key_FreeBuf%16);
+			str[4] = ':';
+			HEX_TO_ASCII(str[5],Key_DataBuf/16/16/16);
+			HEX_TO_ASCII(str[6],Key_DataBuf/16/16%16);
+			HEX_TO_ASCII(str[7],Key_DataBuf/16%16);
+			HEX_TO_ASCII(str[8],Key_DataBuf%16);
+			str[9] = ':';
+			HEX_TO_ASCII(str[10],0);
+			str[11] = '\n';
+			str[12] = '\0';
+			CDC_Print(str);
+		}else if(!strncmp("KEY_FLASH",&Uart_TxBuff[0],9)){
+			TK_FlashFreeFlag = 1;
 		}
 		return 1;
 	}

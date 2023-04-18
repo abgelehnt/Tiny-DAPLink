@@ -18,7 +18,7 @@
 * Output         : None
 * Return         : UINT8 i 返回写入长度
 *******************************************************************************/
-UINT8 WriteDataFlash(UINT8 Addr,PUINT8 buf,UINT8 len)
+UINT8 WriteDataFlash(UINT8 Addr,PUINT8 buf,UINT8 len) reentrant
 {
     UINT8 i;
     SAFE_MOD = 0x55;
@@ -50,7 +50,7 @@ UINT8 WriteDataFlash(UINT8 Addr,PUINT8 buf,UINT8 len)
 * Output         : None
 * Return         : UINT8 i 返回写入长度
 *******************************************************************************/
-UINT8 ReadDataFlash(UINT8 Addr,UINT8 len,PUINT8 buf)
+UINT8 ReadDataFlash(UINT8 Addr,UINT8 len,PUINT8 buf) reentrant
 {
     UINT8 i;
     ROM_ADDR_H = DATA_FLASH_ADDR >> 8;

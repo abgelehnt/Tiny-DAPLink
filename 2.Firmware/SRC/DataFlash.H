@@ -1,7 +1,10 @@
 /* ÄÚ´æ±í
  * 0x00: Keyboard_Key
+ * 0x10: KeyboardH
+ * 0x11: KeyboardL
 */
-
+#ifndef	DATAFLASH_H
+#define	DATAFLASH_H
 
 /*******************************************************************************
 * Function Name  : WriteDataFlash(UINT16 Addr,PUINT8 buf,UINT8 len)
@@ -10,7 +13,7 @@
 * Output         : None 
 * Return         : 
 *******************************************************************************/
-UINT8 WriteDataFlash(UINT8 Addr,PUINT8 buf,UINT8 len);
+UINT8 WriteDataFlash(UINT8 Addr,PUINT8 buf,UINT8 len) reentrant;
 
 /*******************************************************************************
 * Function Name  : ReadDataFlash(UINT8 Addr,UINT8 len,PUINT8 buf)
@@ -19,4 +22,7 @@ UINT8 WriteDataFlash(UINT8 Addr,PUINT8 buf,UINT8 len);
 * Output         : None
 * Return         : UINT8 l
 *******************************************************************************/
-UINT8 ReadDataFlash(UINT8 Addr,UINT8 len,PUINT8 buf);
+UINT8 ReadDataFlash(UINT8 Addr,UINT8 len,PUINT8 buf) reentrant;
+
+
+#endif
