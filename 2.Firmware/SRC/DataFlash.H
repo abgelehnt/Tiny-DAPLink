@@ -17,7 +17,7 @@
 * Output         : None 
 * Return         : 
 *******************************************************************************/
-UINT8 WriteDataFlash(UINT8 Addr,PUINT8 buf,UINT8 len) reentrant;
+UINT8 WriteDataFlash(UINT8 Addr,PUINT8 buf,UINT8 len);
 
 /*******************************************************************************
 * Function Name  : ReadDataFlash(UINT8 Addr,UINT8 len,PUINT8 buf)
@@ -26,7 +26,7 @@ UINT8 WriteDataFlash(UINT8 Addr,PUINT8 buf,UINT8 len) reentrant;
 * Output         : None
 * Return         : UINT8 l
 *******************************************************************************/
-UINT8 ReadDataFlash(UINT8 Addr,UINT8 len,PUINT8 buf) reentrant;
+UINT8 ReadDataFlash(UINT8 Addr,UINT8 len,PUINT8 buf);
 
 
 #endif

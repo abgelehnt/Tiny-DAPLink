@@ -10,6 +10,7 @@
 
 extern BOOL Keyboard_Flag;
 extern UINT8I TargetKey;
+extern BOOL Keyboard_FlashFlag;
 
 void Keyboard_Press(void);	// 不能在中断中执行
 

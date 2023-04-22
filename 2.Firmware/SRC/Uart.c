@@ -4,34 +4,24 @@
 #include "AT.h"
 
 UINT8X Uart_TxBuff0[64] _at_ 0x0300;
-BOOL Uart_TxBuff0Used;
-UINT8 Uart_TxBuff0Length;
+BOOL Uart_TxBuff0Used = 0;
+UINT8 Uart_TxBuff0Length = 0;
 UINT8X Uart_TxBuff1[64] _at_ 0x0340;
-BOOL Uart_TxBuff1Used;
-UINT8 Uart_TxBuff1Length;
+BOOL Uart_TxBuff1Used = 0;
+UINT8 Uart_TxBuff1Length = 0;
 UINT8X Uart_RxBuff0[64] _at_ 0x0380;
-BOOL Uart_RxBuff0Used;
+BOOL Uart_RxBuff0Used = 0;
 UINT8X Uart_RxBuff1[64] _at_ 0x03C0;
-BOOL Uart_RxBuff1Used;
-UINT8 Uart_TxPointer;
-UINT8 Uart_RxPointer;
-BOOL Uart_TxDealingWhich;
-BOOL Uart_RxDealingWhich;
+BOOL Uart_RxBuff1Used = 0;
+UINT8 Uart_TxPointer = 0;
+UINT8 Uart_RxPointer = 0;
+BOOL Uart_TxDealingWhich = 0;
+BOOL Uart_RxDealingWhich = 0;
 
-void UART_Setup(void)
-{
-	Uart_TxBuff0Used = 0;
-	Uart_TxBuff1Used = 0;
-	Uart_RxBuff0Used = 0;
-	Uart_RxBuff1Used = 0;
-	Uart_TxBuff0Length = 0;
-	Uart_TxBuff1Length = 0;
-	Uart_TxPointer = 0;
-	Uart_RxPointer = 0;
-	
-	P3_MOD_OC|=0x03;
-	P3_DIR_PU|=0x03;
-	
+void UART_Setup(void) {
+	P3_MOD_OC |= 0x03;
+	P3_DIR_PU |= 0x03;
+
 	//使用Timer1作为波特率发生器	
 	RCLK = 0; //UART0接收时钟
 	TCLK = 0; //UART0发送时钟
@@ -39,23 +29,22 @@ void UART_Setup(void)
 
 	TMOD = TMOD & ~bT1_GATE & ~bT1_CT & ~MASK_T1_MOD | bT1_M1; //0X20，Timer1作为8位自动重载定时器
 	T2MOD = T2MOD | bTMR_CLK | bT1_CLK;                        //Timer1时钟选择
-	TH1 = 0 - (UINT32)(FREQ_SYS+DEFAULT_UART_BUAD*8) / DEFAULT_UART_BUAD / 16;//12MHz晶振,buad/12为实际需设置波特率
-	TR1 = 1; 																	//启动定时器1
+	TH1 = 0 - (UINT32) (FREQ_SYS + DEFAULT_UART_BUAD * 8) / DEFAULT_UART_BUAD / 16;//12MHz晶振,buad/12为实际需设置波特率
+	TR1 = 1;                                                                    //启动定时器1
 	SCON = 0x50;//串口0使用模式1    TI = 1;    REN = 1;       
 	IP |= PS;
 	ES = 1;
 }
 
-void Config_Uart0(UINT8 *cfg_uart)
-{
-    UINT32 uart0_buad = 0;
-    *((UINT8 *)&uart0_buad) = cfg_uart[3];
-    *((UINT8 *)&uart0_buad + 1) = cfg_uart[2];
-    *((UINT8 *)&uart0_buad + 2) = cfg_uart[1];
-    *((UINT8 *)&uart0_buad + 3) = cfg_uart[0];
-    ES = 0;
-    TH1 = 0 - ((FREQ_SYS+8*uart0_buad) / 16 / uart0_buad);
-    ES = 1;
+void Config_Uart0(UINT8 *cfg_uart) {
+	UINT32 uart0_buad = 0;
+	*((UINT8 *) &uart0_buad) = cfg_uart[3];
+	*((UINT8 *) &uart0_buad + 1) = cfg_uart[2];
+	*((UINT8 *) &uart0_buad + 2) = cfg_uart[1];
+	*((UINT8 *) &uart0_buad + 3) = cfg_uart[0];
+	ES = 0;
+	TH1 = 0 - ((FREQ_SYS + 8 * uart0_buad) / 16 / uart0_buad);
+	ES = 1;
 }
 
 

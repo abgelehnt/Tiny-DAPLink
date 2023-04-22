@@ -25,10 +25,10 @@ UINT8X Ep3BufferI[4 * THIS_ENDP0_SIZE] _at_ 0x0200; //¶Ëµã3 INË«»º³åÇø,±ØÐëÊÇÅ¼µ
 
 UINT8X Ep4Buffer[ENDP4_IN_SIZE+2] _at_ 0x0040; //¶Ëµã4 INË«»º³åÇø,±ØÐëÊÇÅ¼µØÖ·
 
-BOOL DAP_LED_BUSY;
+BOOL DAP_LED_BUSY = 0;
 
-UINT8I Ep2Oi, Ep2Oo;            //OUT Ë÷Òý
-UINT8I Ep3Ii, Ep3Io;            //IN Ë÷Òý
+UINT8I Ep2Oi = 0, Ep2Oo = 0;            //OUT Ë÷Òý
+UINT8I Ep3Ii = 0, Ep3Io = 0;            //IN Ë÷Òý
 UINT8I Ep3Is[DAP_PACKET_COUNT]; //·¢ËÍ°ü³¤
 
 PUINT8 pDescr; //USBÅäÖÃ±êÖ¾
@@ -241,12 +241,6 @@ void USBDeviceInit()
 
 	UEP1_T_LEN = 0;  //Ô¤Ê¹ÓÃ·¢ËÍ³¤¶ÈÒ»¶¨ÒªÇå¿Õ
 	UEP2_T_LEN = 0;  //Ô¤Ê¹ÓÃ·¢ËÍ³¤¶ÈÒ»¶¨ÒªÇå¿Õ
-
-	Ep2Oi = 0;
-	Ep2Oo = 0;
-	Ep3Ii = 0;
-	Ep3Io = 0;
-	Endp3Busy = 0;
 }
 
 void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USBÖÐ¶Ï·þÎñ³ÌÐò,Ê¹ÓÃ¼Ä´æÆ÷×é1
@@ -628,7 +622,7 @@ void DeviceInterrupt(void) interrupt INT_NO_USB using 1 //USBÖÐ¶Ï·þÎñ³ÌÐò,Ê¹ÓÃ¼Ä
         {
 			while ( XBUS_AUX & bUART0_TX )
 				;									// wait until uart0 complete transmitting.
-			LED = 0;
+			LED = 1;
 			PCON |= PD;								//sleep
         }
     }

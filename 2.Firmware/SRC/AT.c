@@ -14,7 +14,7 @@
 
 #pragma RB(1)
 
-BOOL TO_IAP;
+BOOL TO_IAP = 0;
 
 void CDC_Print(char * targetString){
 	char * str;
@@ -67,8 +67,8 @@ UINT8 AT_Process(char xdata * Uart_TxBuff){
 		}else if(!strncmp("KEY=",&Uart_TxBuff[0],4)){
 			UINT8 x;
 			ASCII_TO_HEX(x,&Uart_TxBuff[4]);
-			WriteDataFlash(0,&x,1);
 			TargetKey = x;
+			Keyboard_FlashFlag = 1;
 		}else if(!strncmp("KEY?",&Uart_TxBuff[0],4)){
 			UINT8 str[5] = {0};
 			HEX_TO_ASCII(str[0],TargetKey/16);

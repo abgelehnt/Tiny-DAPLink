@@ -12,7 +12,8 @@
 extern UINT8X Ep4Buffer[];
 
 BOOL Keyboard_Flag = 0;
-UINT8I TargetKey;
+UINT8I TargetKey = 0xFF;
+BOOL Keyboard_FlashFlag = 0;
 
 void Keyboard_Press(void){
 	if(TargetKey == 0xFF)

@@ -17,7 +17,7 @@
 typedef void( *goISP)( void );
 goISP ISP_ADDR=0x3800;
 
-UINT8 LED_Timer;
+UINT16I LED_Timer = 0;
 
 void main(void)
 {
@@ -28,16 +28,13 @@ void main(void)
 	UART_Setup();
 
 	//Timer2_Init();
-	TK_Init();
-	ReadDataFlash(0,1,&TargetKey);
+	ReadDataFlash(0x20,1,&TargetKey);
 	memset(Ep4Buffer,0,8);
+	TK_Init();
 
 	SAFE_MOD = 0x55;
 	SAFE_MOD = 0xAA;
 	WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO;	//USB or RXD0 can wake it up
-
-	DAP_LED_BUSY = 0;
-	LED_Timer = 0;
 
 	EA = 1;          //允许单片机中断
 
@@ -65,18 +62,24 @@ void main(void)
 		else
 		{
 			LED_Timer++;
-			if(LED_Timer==0x09)
+			if(LED_Timer==0x0010)
 			{
 				LED = 1;
-			}else if(LED_Timer==0xFF)
+			}else if(LED_Timer==0x0500)
 			{
 				LED_Timer = 0;
 				LED = 0;
 			}
+
 			TK_Measure();
 			if (TK_FlashFreeFlag){
 				TK_FlashKeyBuf();
 				TK_FlashFreeFlag = 0;
+			}
+
+			if (Keyboard_FlashFlag){
+				WriteDataFlash(0x20,&TargetKey,1);
+				Keyboard_FlashFlag = 0;
 			}
 		}
 
